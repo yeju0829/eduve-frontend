@@ -1,21 +1,19 @@
 import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./Login.css";
 
 const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const userType = location.state?.userType || "student"; // 회원가입 시 전달된 사용자 타입
   const [username, setUsername] = useState("");
 
   const handleLogin = (e) => {
     e.preventDefault();
-    
-    if (userType === "student") {
-      navigate("/dashboard", { state: { name: username } });
-    } else {
-      navigate("/teacher-dashboard", { state: { name: username } });
-    }
+
+    // 사용자 이름 저장
+    localStorage.setItem("username", username);
+
+    // 메인 페이지로 이동
+    navigate("/");
   };
 
   return (
@@ -33,11 +31,6 @@ const Login = () => {
         <input type="password" placeholder="비밀번호" />
         <button type="submit" className="login-btn">로그인</button>
       </form>
-      <hr />
-      <p className="links">
-        <span>아이디 찾기</span> | <span>비밀번호 찾기</span> |  
-        <span className="signup-link" onClick={() => navigate("/signup")}> 회원가입</span>
-      </p>
     </div>
   );
 };

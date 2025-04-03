@@ -1,0 +1,146 @@
+/* 페이지 전체 배경색을 네비게이션 바와 동일하게 설정 */
+.main-container {
+    background-color: #fdf8f2;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* 네비게이션 바 */
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 50px;
+    background-color: #fdf8f2;
+    height: 60px;
+  }
+  
+  /* 로고 스타일 */
+  .logo {
+    font-size: 1.8rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+  }
+  
+  .edu {
+    color: #1B512D;
+  }
+  
+  .ve {
+    color: #3A973E;
+  }
+  
+  /* 네비게이션 링크 */
+  .nav-links {
+    display: flex;
+    gap: 40px;
+    font-size: 1.2rem;
+    color: #1B512D;
+    cursor: pointer;
+    align-items: center;
+  }
+  
+  .nav-item {
+    transition: color 0.3s ease-in-out;
+    color: #1B512D;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  .nav-item:hover {
+    color: #3A973E;
+  }
+  
+  .user-name {
+    font-weight: bold;
+    color: #3A973E;
+  }
+  
+  .logout-btn {
+    font-weight: bold;
+    color: #3A973E;
+  }
+  
+  .logout-btn:hover {
+    color: #3A973E;
+  }
+  
+  /* 메인 컨텐츠 레이아웃 조정 */
+  .main-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 50px 10%;
+    flex-grow: 1;
+  }
+  
+  .text-container {
+    max-width: 50%;
+    text-align: left;
+  }
+  
+  .text-container h2 {
+    font-size: 3.5rem;
+    font-weight: bold;
+    color: #1d3b20;
+    margin-bottom: 15px;
+  }
+  
+  .sub-text {
+    font-size: 2.5rem;
+    color: #1B512D;
+  }
+  
+  /* 이미지 컨테이너 겹치게 배치 */
+  .image-container {
+    position: relative;
+    width: 700px;
+    height: 450px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .ai-teacher {
+    position: absolute;
+    bottom: -70px;
+    left: -65px;
+    width: 230px;
+    z-index: 3;
+  }
+  
+  .learning-student {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 450px;
+    z-index: 2;
+  }
+  
+  .ai-character {
+    position: absolute;
+    top: -100px;
+    right: -30px;
+    width: 200px;
+    z-index: 1;
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  

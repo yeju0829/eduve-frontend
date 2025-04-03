@@ -17,7 +17,7 @@ const StudentDashboard = () => {
   ];
 
   if (userType === "teacher") {
-    navigate("/teacher-dashboard"); // 아직 만들지 않은 페이지
+    navigate("/teacher-dashboard"); 
     return null;
   }
 

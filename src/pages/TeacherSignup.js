@@ -5,6 +5,10 @@ import "./TeacherSignup.css";
 const TeacherSignup = () => {
   const navigate = useNavigate();
 
+  const handleSignup = () => {
+    navigate("/login");
+  }
+
   return (
     <div className="teacher-signup-container">
       <h1 className="title">
