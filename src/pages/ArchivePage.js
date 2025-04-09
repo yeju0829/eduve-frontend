@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { uploadFile, embedFile } from '../api/fileApi';
 import { v4 as uuidv4 } from 'uuid';
 import './ArchivePage.css';
+import { jwtDecode } from 'jwt-decode';
+
 
 const ArchivePage = () => {
   const navigate = useNavigate();
@@ -62,32 +64,44 @@ const ArchivePage = () => {
   const handleFileSelect = async (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
+
+    // 토큰에서 userId 추출
+    const token = localStorage.getItem('token');
+    let userId;
+    try {
+      const decoded = jwtDecode(token);
+      userId = decoded.userId; // Long 타입 userId 추출
+    } catch (err) {
+      console.error('토큰 디코딩 실패:', err);
+      alert('로그인 정보를 확인할 수 없습니다. 다시 로그인 해주세요.');
+      return;
+    }
+    
   
     const formData = new FormData();
     formData.append('file', selectedFile);
-    formData.append('userId', username);
+    formData.append('userId', userId);
     formData.append('folderId', 1);
   
     try {
       const res = await uploadFile(formData);
       console.log('업로드 응답:', res);
   
-      // 1. 문자열에서 URL 추출
-      const responseStr = res.data;
-      const urlMatch = responseStr.match(/S3 URL:\s*(https?:\/\/[^\s]+)/);
-      const fileUrl = urlMatch ? urlMatch[1] : null;
-  
-      if (!fileUrl) {
-        console.error('파일 URL을 파싱하지 못했습니다.');
-        return;
-      }
-  
+      // ✅ JSON 응답에서 바로 데이터 꺼내기
+      // ✅ 백엔드 JSON 구조에 맞춰서 데이터 꺼내기
+      const { fileInfo, flaskMessage } = res.data;
+      const { fileUrl, fileName, fileType } = fileInfo;
+
+      // ✅ flaskMessage는 JSON 문자열이므로 파싱 필요
+      const flaskMsgParsed = JSON.parse(flaskMessage);
+      const embeddingMessage = flaskMsgParsed.message;
+
       const newFile = {
         id: uuidv4(),
-        name: selectedFile.name,
+        name: fileName,
         path: [...currentPath],
         fileUrl: fileUrl,
-        type: selectedFile.type,
+        type: fileType,
       };
   
       console.log('추가할 파일:', newFile);
@@ -98,8 +112,8 @@ const ArchivePage = () => {
         return updated;
       });
   
-      const embedRes = await embedFile(selectedFile);
-      console.log('임베딩 성공:', embedRes.message);
+      console.log('임베딩 메시지:', embeddingMessage);
+
     } catch (err) {
       console.error('업로드 또는 임베딩 실패:', err);
     }

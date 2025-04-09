@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './ChatPage.css';
+import axiosInstance from '../api/axiosInstance';
+import { jwtDecode } from 'jwt-decode';
+import ReactMarkdown from 'react-markdown';
+
 
 const ChatArea = () => {
   const [messages, setMessages] = useState([
@@ -11,7 +15,7 @@ const ChatArea = () => {
   const handleSend = async () => {
     if (!input.trim()) return;
 
-    const token = localStorage.getItem('token');
+    // const token = localStorage.getItem('token');
     const userQuestion = input;
 
     // 사용자 메시지를 먼저 표시
@@ -22,12 +26,15 @@ const ChatArea = () => {
     setInput(''); // 입력창 비우기
 
     try {
-      const res = await axios.post(
-        `http://15.164.97.117:8080/chat/start/2`,
-        { content: input },
+      const token = localStorage.getItem('token');
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId; // userId 추출
+
+      const res = await axiosInstance.post(
+        `/chat/start/${userId}`,
+        { question: input },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         }
@@ -60,7 +67,7 @@ const ChatArea = () => {
             key={idx}
             className={`chat-message ${msg.sender === 'user' ? 'message-user' : 'message-jackson'}`}
           >
-            {msg.text}
+            <ReactMarkdown>{msg.text}</ReactMarkdown>
           </div>
         ))}
       </div>
