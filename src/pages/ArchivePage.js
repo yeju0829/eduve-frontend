@@ -1,17 +1,37 @@
-// ArchivePage.js
-import React, { useState } from 'react';
+// 📁 src/pages/ArchivePage.js
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { uploadFile, embedFile } from '../api/fileApi';
+import { v4 as uuidv4 } from 'uuid';
 import './ArchivePage.css';
 
 const ArchivePage = () => {
   const navigate = useNavigate();
-  const username = localStorage.getItem('username');
 
   const [folders, setFolders] = useState([]);
   const [files, setFiles] = useState([]);
   const [newFolderName, setNewFolderName] = useState('');
   const [isAddingFolder, setIsAddingFolder] = useState(false);
   const [currentPath, setCurrentPath] = useState([]);
+  const [previewFileUrl, setPreviewFileUrl] = useState(null);
+
+  const username = localStorage.getItem('username') || '2';
+
+  useEffect(() => {
+    localStorage.setItem('username', username);
+
+    const savedFiles = localStorage.getItem('files');
+    if (savedFiles) {
+      try {
+        const parsedFiles = JSON.parse(savedFiles);
+        const validFiles = parsedFiles.filter(file => file && file.name && file.id);
+        setFiles(validFiles);
+      } catch (err) {
+        console.error('파일 파싱 오류:', err);
+        localStorage.removeItem('files');
+      }
+    }
+  }, [username]);
 
   const handleLogout = () => {
     localStorage.removeItem('username');
@@ -21,12 +41,12 @@ const ArchivePage = () => {
   const handleAddFolder = () => {
     if (!newFolderName.trim()) return;
     const newFolder = {
-      id: Date.now(),
+      id: uuidv4(),
       name: newFolderName,
       color: '#1B512D',
       path: [...currentPath],
     };
-    setFolders([...folders, newFolder]);
+    setFolders(prev => [...prev, newFolder]);
     setNewFolderName('');
     setIsAddingFolder(false);
   };
@@ -39,39 +59,77 @@ const ArchivePage = () => {
     setCurrentPath(currentPath.slice(0, index + 1));
   };
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = async (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
+  
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('userId', username);
+    formData.append('folderId', 1);
+  
+    try {
+      const res = await uploadFile(formData);
+      console.log('업로드 응답:', res);
+  
+      // 1. 문자열에서 URL 추출
+      const responseStr = res.data;
+      const urlMatch = responseStr.match(/S3 URL:\s*(https?:\/\/[^\s]+)/);
+      const fileUrl = urlMatch ? urlMatch[1] : null;
+  
+      if (!fileUrl) {
+        console.error('파일 URL을 파싱하지 못했습니다.');
+        return;
+      }
+  
       const newFile = {
-        id: Date.now(),
+        id: uuidv4(),
         name: selectedFile.name,
         path: [...currentPath],
-        thumbnail: reader.result,
+        fileUrl: fileUrl,
+        type: selectedFile.type,
       };
-      setFiles((prev) => [...prev, newFile]);
-    };
-
-    reader.readAsDataURL(selectedFile);
+  
+      console.log('추가할 파일:', newFile);
+  
+      setFiles(prev => {
+        const updated = [...prev, newFile];
+        localStorage.setItem('files', JSON.stringify(updated));
+        return updated;
+      });
+  
+      const embedRes = await embedFile(selectedFile);
+      console.log('임베딩 성공:', embedRes.message);
+    } catch (err) {
+      console.error('업로드 또는 임베딩 실패:', err);
+    }
   };
 
   const displayedFolders = folders.filter(
-    (folder) => JSON.stringify(folder.path) === JSON.stringify(currentPath)
+    folder => JSON.stringify(folder.path) === JSON.stringify(currentPath)
   );
 
   const displayedFiles = files.filter(
-    (file) => JSON.stringify(file.path) === JSON.stringify(currentPath)
+    file => JSON.stringify(file.path) === JSON.stringify(currentPath)
   );
+
+  const handleFileDoubleClick = (file) => {
+    if (file.fileUrl) {
+      setPreviewFileUrl(file.fileUrl);
+    } else {
+      alert('파일 URL이 존재하지 않습니다.');
+    }
+  };
+
+  const closePreview = () => {
+    setPreviewFileUrl(null);
+  };
 
   return (
     <div className="archive-container">
       <nav className="navbar">
         <div className="nav-left">
-          <h1 className="logo">
-            <span className="edu">Edu</span><span className="ve">'ve</span>.com
-          </h1>
+          <h1 className="logo"><span className="edu">Edu</span><span className="ve">'ve</span>.com</h1>
         </div>
         <div className="nav-links">
           <span className="nav-item" onClick={() => navigate('/character')}>캐릭터</span>
@@ -94,12 +152,7 @@ const ArchivePage = () => {
       <div className="archive-header">
         <input className="archive-search" type="text" placeholder="Search" />
         <div className="archive-buttons">
-          <input
-            type="file"
-            id="file-upload"
-            style={{ display: 'none' }}
-            onChange={handleFileSelect}
-          />
+          <input type="file" id="file-upload" style={{ display: 'none' }} onChange={handleFileSelect} />
           <button className="btn add-file" onClick={() => document.getElementById('file-upload').click()}>
             파일추가
           </button>
@@ -114,7 +167,7 @@ const ArchivePage = () => {
           <>
             <span className="path-link" onClick={() => setCurrentPath([])}>홈</span>
             {currentPath.map((part, idx) => (
-              <span key={idx} onClick={() => handlePathClick(idx)} className="path-link">
+              <span key={`${part}-${idx}`} onClick={() => handlePathClick(idx)} className="path-link">
                 {' / '}{part}
               </span>
             ))}
@@ -147,20 +200,35 @@ const ArchivePage = () => {
       </div>
 
       <div className="file-list">
-        {displayedFiles.map(file => (
-          <div key={file.id} className="file-box">
-            <img src={file.thumbnail} alt={file.name} className="file-thumbnail" />
-            <div className="file-name">{file.name}</div>
-          </div>
-        ))}
+        {displayedFiles.map((file, idx) =>
+          file && file.id && file.name ? (
+            <div key={file.id || idx} className="file-box" onDoubleClick={() => handleFileDoubleClick(file)}>
+              <img src="/pdf-thumbnail.png" alt="file icon" className="file-thumbnail" />
+              <div className="file-name">{file.name}</div>
+            </div>
+          ) : null
+        )}
       </div>
 
-      {displayedFolders.length === 0 && displayedFiles.length === 0 && !isAddingFolder && (
-        <div className="empty-message">아직 생성된 폴더나 파일이 없습니다.</div>
+      {previewFileUrl && (
+        <div className="modal-overlay" onClick={closePreview}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <iframe
+              src={previewFileUrl}
+              title="PDF 미리보기"
+              width="100%"
+              height="700px"
+              style={{ border: 'none' }}
+            />
+            <button className="close-btn" onClick={closePreview}>닫기</button>
+          </div>
+        </div>
       )}
     </div>
   );
 };
 
 export default ArchivePage;
+
+
 

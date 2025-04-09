@@ -45,19 +45,16 @@ const ChatPage = () => {
         </div>
       </nav>
 
-      {/* 본문 레이아웃 */}
+      {/* 본문 */}
       <div className="chat-body">
-        {/* 왼쪽: 잭슨 이미지 */}
         <div className="chat-left">
           <img src="/jackson.png" alt="잭슨" className="jackson-chat-img" />
           <p className="jackson-label">잭슨</p>
         </div>
-
-        {/* 오른쪽: 채팅 화면 */}
         <div className="chat-right">
           <div className="chat-box">
             <ChatArea />
-            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -65,3 +62,5 @@ const ChatPage = () => {
 };
 
 export default ChatPage;
+
+

@@ -1,129 +1,136 @@
 /* 전체 페이지 */
 .chat-page {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    background-color: #fdf8f2;
-  }
-  
-  /* 상단 네비게이션 아래 본문 */
-  .chat-body {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-  }
-  
-  /* 왼쪽 고양이 영역 */
-  .chat-left {
-    width: 30%;
-    background-color: #F5EDE5;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-  }
-  
-  .jackson-chat-img {
-    width: 200px;
-    height: auto;
-    object-fit: contain;
-    margin-bottom: 0.5rem;
-  }
-  
-  .jackson-label {
-    font-weight: bold;
-    font-size: 1.2rem;
-    color: #333;
-  }
-  
-  /* 오른쪽 채팅 영역 */
-  .chat-right {
-    width: 70%;
-    padding: 2rem;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-  }
-  
-  /* 초록 테두리 박스 */
-  .chat-box {
-    width: 100%;
-    height: 80vh;
-    max-width: 900px;
-    border: 2px solid #1B512D;
-    border-radius: 12px;
-    background-color: #FFFFFF;
-    display: flex;
-    flex-direction: column;
-    padding: 1rem;
-    box-sizing: border-box;
-  }
-  
-  /* 내부 채팅 영역 */
-  .chat-area-inner {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-  
-  /* 채팅 메시지 리스트 영역 */
-  .chat-messages {
-    flex: 1;
-    overflow-y: auto;
-    margin-bottom: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  /* 말풍선 스타일 */
-  .chat-message {
-    padding: 0.75rem 1rem;
-    border-radius: 12px;
-    max-width: 75%;
-    word-break: break-word;
-    font-size: 0.95rem;
-    line-height: 1.4;
-  }
-  
-  /* 사용자 메시지 (오른쪽) */
-  .message-user {
-    background-color: #3A973E;
-    color: white;
-    align-self: flex-end;
-  }
-  
-  /* 잭슨 메시지 (왼쪽) */
-  .message-jackson {
-    background-color: #e5e7eb;
-    color: black;
-    align-self: flex-start;
-  }
-  
-  /* 입력창 영역 */
-  .chat-input-box {
-    display: flex;
-    margin-top: auto;
-    gap: 0.5rem;
-  }
-  
-  .chat-input {
-    flex: 1;
-    border: 1px solid #ccc;
-    border-radius: 0.5rem;
-    padding: 0.5rem;
-    margin-right: 0.5rem;
-  }
-  
-  .chat-send-btn {
-    background-color: #1B512D;
-    color: white;
-    border: none;
-    border-radius: 0.5rem;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-  }
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #fdf8f2;
+}
+
+/* 상단 네비게이션 아래 본문 */
+.chat-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 왼쪽 고양이 영역 */
+.chat-left {
+  width: 30%;
+  background-color: #F5EDE5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.jackson-chat-img {
+  width: 200px;
+  height: auto;
+  object-fit: contain;
+  margin-bottom: 0.5rem;
+}
+
+.jackson-label {
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+/* 오른쪽 채팅 영역 */
+.chat-right {
+  width: 70%;
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* 초록 테두리 박스 */
+.chat-box {
+  width: 100%;
+  height: 80vh;
+  max-width: 900px;
+  border: 2px solid #1B512D;
+  border-radius: 12px;
+  background-color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+/* 내부 채팅 영역 */
+.chat-area-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 채팅 메시지 리스트 영역 */
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* 말풍선 스타일 */
+.chat-message {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  max-width: 75%;
+  word-break: break-word;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* 사용자 메시지 (오른쪽) */
+.message-user {
+  background-color: #3A973E;
+  color: white;
+  align-self: flex-end;
+}
+
+/* 잭슨 메시지 (왼쪽) */
+.message-jackson {
+  background-color: #e5e7eb;
+  color: black;
+  align-self: flex-start;
+}
+
+/* 입력창 영역 */
+.chat-input-box {
+  display: flex;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  gap: 0.5rem;
+}
+
+.chat-input {
+  flex: 1;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+}
+
+.chat-send-btn {
+  background-color: #1B512D;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.chat-send-btn:hover {
+  background-color: #3A973E;
+}
+
   
   
   
