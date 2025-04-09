@@ -8,7 +8,7 @@ import ReactMarkdown from 'react-markdown';
 
 const ChatArea = () => {
   const [messages, setMessages] = useState([
-    { sender: '잭슨', text: '안녕! 궁금한 걸 물어봐달라냥' }
+    { sender: '잭슨', text: '안녕! 궁금한 걸 물어보라듀' }
   ]);
   const [input, setInput] = useState('');
 

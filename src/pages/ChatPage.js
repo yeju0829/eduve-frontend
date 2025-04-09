@@ -48,8 +48,8 @@ const ChatPage = () => {
       {/* 본문 */}
       <div className="chat-body">
         <div className="chat-left">
-          <img src="/jackson.png" alt="잭슨" className="jackson-chat-img" />
-          <p className="jackson-label">잭슨</p>
+          <img src="/dogdog.png" alt="잭슨" className="jackson-chat-img" />
+          <p className="jackson-label">듀가나디</p>
         </div>
         <div className="chat-right">
           <div className="chat-box">
