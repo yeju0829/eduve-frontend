@@ -22,6 +22,19 @@ const ArchivePage = () => {
   useEffect(() => {
     localStorage.setItem('username', username);
 
+    // 🔹 폴더 정보 불러오기
+  const savedFolders = localStorage.getItem('folders');
+  if (savedFolders) {
+    try {
+      const parsedFolders = JSON.parse(savedFolders);
+      const validFolders = parsedFolders.filter(f => f && f.name && f.id);
+      setFolders(validFolders);
+    } catch (err) {
+      console.error('폴더 파싱 오류:', err);
+      localStorage.removeItem('folders');
+    }
+  }
+
     const savedFiles = localStorage.getItem('files');
     if (savedFiles) {
       try {
@@ -48,7 +61,13 @@ const ArchivePage = () => {
       color: '#1B512D',
       path: [...currentPath],
     };
-    setFolders(prev => [...prev, newFolder]);
+    
+    setFolders(prev => {
+      const updated = [...prev, newFolder];
+      localStorage.setItem('folders', JSON.stringify(updated)); // ✅ 저장!
+      return updated;
+    });
+  
     setNewFolderName('');
     setIsAddingFolder(false);
   };

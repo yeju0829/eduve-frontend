@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './ChatPage.css';
 import axiosInstance from '../api/axiosInstance';
@@ -11,6 +11,11 @@ const ChatArea = () => {
     { sender: '잭슨', text: '안녕! 궁금한 걸 물어보라듀' }
   ]);
   const [input, setInput] = useState('');
+
+  // ✅ messages가 바뀔 때마다 localStorage에 저장
+  useEffect(() => {
+    localStorage.setItem('chatMessages', JSON.stringify(messages));
+  }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
