@@ -12,7 +12,7 @@ const TeacherSignup = () => {
   return (
     <div className="teacher-signup-container">
       <h1 className="title">
-        <span className="edu">Edu</span><span className="ve">'ve</span>
+        <span className="edu">Edu</span><span className="ve">'ve</span><span className="com">.com</span>
       </h1>
       <h2>선생님 회원가입</h2>
       <form className="signup-form">

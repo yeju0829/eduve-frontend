@@ -22,11 +22,14 @@
 .ve {
     color: #3A973E;
 }
+.com{
+    color: #1B512D;
+}
 
 /* "학생 회원가입"과 부모 컨테이너 사이 간격 */
 h2 {
     color: #1B512D;
-    margin-bottom: 40px;
+    margin-bottom: 80px;
 }
   
 /* 폼 스타일 */
@@ -114,7 +117,7 @@ h2 {
 
 /* 가입하기 버튼 */
 .submit-btn {
-    background-color: #35FF69;
+    background-color: #CDD6A2;
     color: black;
     border: none;
     padding: 12px;
@@ -126,7 +129,7 @@ h2 {
 }
 
 .submit-btn:hover {
-    background-color: #50c878;
+    background-color: #CDD6A2;
 }
 
 /* 로그인 링크 */

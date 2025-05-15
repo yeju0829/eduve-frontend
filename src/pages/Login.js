@@ -38,7 +38,7 @@ const Login = () => {
   return (
     <div className="login-container">
       <h1 className="title">
-        <span className="edu">Edu</span><span className="ve">'ve</span>
+        <span className="edu">Edu</span><span className="ve">'ve</span><span className='com'>.com</span>
       </h1>
       <form className="login-form" onSubmit={handleLogin}>
         <input

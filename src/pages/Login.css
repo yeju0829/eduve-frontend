@@ -12,7 +12,7 @@
     font-size: 2.5rem;
     font-weight: bold;
     color: #1B512D;
-    margin-bottom: 40px;
+    margin-bottom: 500px;
 }
 
 .edu {
@@ -22,9 +22,13 @@
 .ve {
     color: #3A973E;
 }
+.com{
+    color: #1B512D;
+}
 
 /* 로그인 폼 스타일 */
 .login-form {
+    margin-top: 80px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -44,7 +48,7 @@
 }
 
 .login-btn {
-    background-color: #35FF69;
+    background-color: #CDD6A2;
     color: black;
     border: none;
     padding: 12px;
@@ -52,11 +56,11 @@
     border-radius: 5px;
     font-size: 1rem;
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 50px;
 }
 
 .login-btn:hover {
-    background-color: #50c878;
+    background-color: #CDD6A2;
 }
 
 /* 구분선 */

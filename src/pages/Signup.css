@@ -23,6 +23,7 @@
   .signup-options {
     display: flex;
     gap: 70px;
+    margin-top: 80px;
   }
   
   .signup-box {

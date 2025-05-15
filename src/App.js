@@ -15,6 +15,7 @@ import StudentDashboard from "./pages/StudentDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import ChatPage from "./pages/ChatPage";
 import ArchivePage from "./pages/ArchivePage";
+import CharacterPage from "./pages/CharacterPage";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/materials" element={<ArchivePage />} />
+        <Route path="/character" element={<CharacterPage />} />
 
         {/* ✅ 마지막에만 와일드카드 리다이렉트 추가 */}
         <Route path="*" element={<Navigate to="/" replace />} />
