@@ -142,16 +142,18 @@ const ChatArea = ({ messages, setMessages, username }) => {
         {/* 메시지 출력 영역 */}
         <div className="chat-messages">
           {messages.map((msg, idx) => (
-            <div key={msg.messageId || msg.id || idx} className="chat-message-wrapper">
+            <div
+              key={msg.messageId || msg.id || idx}
+              className={`chat-message-wrapper ${msg.userMessage ? 'user' : ''}`}
+            >
               <div
                 className={`chat-message ${
-                  msg.sender === 'user' ? 'message-user' : 'message-jackson'
+                  msg.userMessage ? 'message-user' : 'message-jackson'
                 }`}
               >
                 <ReactMarkdown>{msg.text}</ReactMarkdown>
 
-                {/* 좋아요 아이콘 (잭슨 메시지에만) */}
-                {msg.sender === '잭슨' && (
+                {!msg.userMessage && (
                   <img
                     src={liked[msg.messageId || msg.id] ? '/thumbs_fill.png' : '/thumbs_blank.png'}
                     alt="thumbs up"
@@ -160,7 +162,6 @@ const ChatArea = ({ messages, setMessages, username }) => {
                   />
                 )}
 
-                {/* PDF 썸네일 (백엔드가 thumbnails 배열을 내려줄 때) */}
                 {msg.thumbnails?.map((t, i) => (
                   <img
                     key={i}

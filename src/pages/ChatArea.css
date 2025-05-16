@@ -44,36 +44,44 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    margin-bottom: 4px;
+    margin-bottom: 28px; /* 좋아요 아이콘을 위한 하단 여백 증가 */
     width: 100%;
+  }
+
+  /* 사용자 메시지 wrapper */
+  .chat-message-wrapper.user {
+    align-items: flex-end; /* 사용자 메시지는 오른쪽 정렬 */
+  }
+
+  .chat-message-wrapper.user .thumb-icon {
+    display: none; /* 사용자 메시지에는 좋아요 아이콘 숨김 */
   }
   
   /* 말풍선 */
   .chat-message {
-    position: relative;          /* thumbs 위치 기준 */
-    padding: 16px 20px;         /* 상하/좌우 여백 증가 */
-    border-radius: 16px;        /* 모서리 더 둥글게 */
+    position: relative;
+    padding: 16px 20px;
+    border-radius: 16px;
     max-width: 75%;
     word-break: break-word;
-    white-space: pre-wrap;      /* 줄바꿈 보존 */
-    overflow-wrap: break-word;  /* 긴 단어 줄바꿈 */
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
     font-size: 0.95rem;
-    line-height: 1.4;
+    line-height: 1.6;
     display: inline-block;
     margin: 4px 0;             /* 말풍선 사이 간격 */
   }
+
   .message-user {
-    background-color: #1B512D;  /* 사용자 메시지 색상 변경 */
+    background-color: #1B512D;
     color: #fff;
-    margin-left: auto;
-    align-self: flex-end;      /* 오른쪽 정렬 */
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* 약간의 그림자 효과 */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
+
   .message-jackson {
     background-color: #e5e7eb;
     color: #000;
-    align-self: flex-start;    /* 왼쪽 정렬 */
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* 약간의 그림자 효과 */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
   
   /* 말풍선 안의 마크다운 스타일링 */
@@ -98,15 +106,16 @@
     border-radius: 4px;
   }
   
-  /* thumbs: 말풍선 바로 아래 우측 */
+  /* thumbs: 말풍선 아래 위치하도록 수정 */
   .thumb-icon {
     position: absolute;
-    top: 55px;
-    left: -4px;
-    width: 25px;
-    height: 25px;
+    left: 0;
+    bottom: -28px; /* wrapper의 margin-bottom과 맞춤 */
+    width: 20px;
+    height: 20px;
     cursor: pointer;
     user-select: none;
+    z-index: 1; /* 다른 말풍선과 겹치지 않도록 */
   }
   
   /* 입력창 구분선 */

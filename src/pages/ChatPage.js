@@ -45,15 +45,24 @@ const ChatPage = () => {
       axiosInstance.get(`/conversations/user/${userId}`)
         .then(response => {
           console.log('Conversations API Response:', response.data);
-          // conversationList 배열에서 데이터 추출
-          const data = response.data.conversationList || response.data;
+          
+          const data = response.data;
           
           // 각 대화 데이터 매핑
           const convs = data.map(conv => ({
             id: conv.conversationId,
-            title: conv.conversationTitle || '새로운 대화',  // title이 없는 경우 기본값
-            createdAt: new Date(conv.createdAt).toLocaleDateString(),  // 날짜 포맷팅
-            messageCount: conv.messageCount || 0
+            title: conv.conversationName || '새로운 대화', 
+            createdAt: conv.createTime
+              ? new Date(conv.createTime).toLocaleString('ko-KR', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false,
+                })
+              : '',
+            messageCount: conv.messages?.length || 0
           }));
           
           console.log('Processed conversations:', convs);
@@ -73,63 +82,60 @@ const ChatPage = () => {
   // 사이드바 닫혀있을 때 캐릭터 조회
   useEffect(() => {
     if (!sidebarOpen && userId) {
-      console.log('Fetching character info for userId:', userId);
-      
-      const fetchCharacterInfo = async () => {
-        try {
-          const response = await axiosInstance.get(`/userCharacter/${userId}`);
-          console.log('Character API Response:', response.data);
-          
+      console.log('Fetching character info for userId:', userId); // 디버깅용 로그
+      axiosInstance.get(`/userCharacter/${userId}`)
+        .then(response => {
+          console.log('Character API Response:', response.data); // 디버깅용 로그
           const characterData = response.data;
+          console.log('Character data:', characterData); // 디버깅용 로그
           if (characterData) {
             setCharacterId(characterData.characterId);
             setCharacterName(characterData.userCharacterName);
             setCharacterImgUrl(characterData.userCharacterImgUrl);
-            console.log('Character data set:', {
-              id: characterData.characterId,
+            console.log('Character data set:', { // 디버깅용 로그
               name: characterData.userCharacterName,
               img: characterData.userCharacterImgUrl
             });
           }
-        } catch (err) {
-          console.error('Character info loading failed:', err);
-          if (err.response) {
-            console.error('Error status:', err.response.status);
-            console.error('Error details:', err.response.data);
-          }
-          // Set default values on error
+        })
+        .catch(err => {
+          console.error('캐릭터 정보 로딩 실패:', err.response || err);
           setCharacterName('Unknown');
           setCharacterImgUrl('/default-character.png');
-        }
-      };
-
-      fetchCharacterInfo();
+        });
     }
   }, [sidebarOpen, userId]);
 
   // 대화주제 클릭시 채팅창에 메시지들 표시
-  const handleConversationClick = async (conversationId) => {
-    try {
-      const response = await axiosInstance.get(`/conversations/${conversationId}/messages`);
-      const messagesData = response.data.messageList;
-      
-      const msgs = messagesData.map((msg, index) => ({
-        id: msg.messageId ?? index,
-        sender: msg.userMessage ? username : '잭슨',
-        text: msg.content,
-        isLiked: msg.isLiked || false,
-      }));
-
-      setMessages(msgs);
-      setSelectedConvId(conversationId);
-    } catch (err) {
-      console.error('Failed to fetch conversation messages:', err);
-      if (err.response) {
-        console.error('Error status:', err.response.status);
-        console.error('Error details:', err.response.data);
-      }
-    }
+  const handleConversationClick = (conversationId) => {
+    axiosInstance.get(`/conversations/${conversationId}/messages`)
+      .then(response => {
+        const data = response.data;
+        const messagesData = data.messageList || [];
+  
+        const msgs = messagesData.map((msg) => ({
+          id: msg.messageId,
+          sender: msg.userMessage ? 'user' : '잭슨', // 'user'로 변경하여 CSS 클래스와 매칭
+          text: msg.content,
+          createdTime: new Date(msg.createdTime).toLocaleString('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          }),
+          isLiked: msg.isLiked || false,
+          userMessage: msg.userMessage // userMessage 플래그 추가
+        }));
+  
+        setMessages(msgs);
+        setSelectedConvId(conversationId);
+      })
+      .catch(err => {
+        console.error('대화 메시지 불러오기 실패:', err.response?.data || err.message);
+      });
   };
+
 
   // 5. 로그아웃 처리 함수
   const handleLogout = () => {
