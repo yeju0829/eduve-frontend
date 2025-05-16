@@ -1,28 +1,76 @@
 // src/pages/ChatArea.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axiosInstance from '../api/axiosInstance';
 import { jwtDecode } from 'jwt-decode';
 import ReactMarkdown from 'react-markdown';
 import './ChatArea.css';
 
-const ChatArea = () => {
-  const [messages, setMessages] = useState([
-    { sender: '잭슨', text: '안녕! 궁금한 걸 물어보라듀' }
-    // 나중에 백엔드에서 { sender, text, thumbnails: [{ imgUrl, pdfUrl }, …] } 형태로 내려올 수 있습니다
-  ]);
-  const [input, setInput] = useState('');
-  const [liked, setLiked] = useState({});
-  const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
+const ChatArea = ({ messages, setMessages, username }) => {
+  const [input, setInput] = useState(''); // 입력창 상태
+  const [liked, setLiked] = useState({}); // 좋아요 상태
+  const [previewPdfUrl, setPreviewPdfUrl] = useState(null); // PDF 미리보기 URL 상태
+
+  const [loading, setLoading] = useState(false);
+
+  // 메시지 목록을 참조하기 위한 ref 추가
+  const messagesEndRef = useRef(null);
+
+  // 스크롤 자동 이동 함수
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // 메시지가 업데이트될 때마다 스크롤
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // 토큰에서 userId 추출
+  const token = localStorage.getItem('token');
+  const { userId } = token ? jwtDecode(token) : {};
+
 
   // 대화 기록을 로컬스토리지에 저장
   useEffect(() => {
     localStorage.setItem('chatMessages', JSON.stringify(messages));
   }, [messages]);
 
-  // 좋아요 토글
-  const toggleLike = idx => {
-    setLiked(prev => ({ ...prev, [idx]: !prev[idx] }));
+
+  // 좋아요 상태를 토글하는 함수
+  const toggleLike = async (messageId, isLiked) => {
+    try {
+      if (!messageId) {
+        console.error('메시지 ID가 없습니다.');
+        return;
+      }
+
+      setLoading(true);
+      
+      if (isLiked) {
+        // 좋아요 취소
+        await axiosInstance.delete(`/messagelike/${messageId}`);
+      } else {
+        // 좋아요 추가
+        await axiosInstance.post(`/messagelike/${messageId}`);
+      }
+      
+      // 상태 업데이트
+      setLiked(prev => ({
+        ...prev,
+        [messageId]: !isLiked
+      }));
+
+    } catch (err) {
+      console.error('좋아요 처리 실패:', err.response?.data || err.message);
+      if (err.response) {
+        console.error('Error status:', err.response.status);
+        console.error('Error details:', err.response.data);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   // PDF 모달 열기/닫기
   const openPdfPreview = url => {
@@ -35,25 +83,42 @@ const ChatArea = () => {
   // 전송 처리
   const handleSend = async () => {
     if (!input.trim()) return;
-    // 1) 유저 메시지 추가
-    setMessages(prev => [...prev, { sender: 'user', text: input }]);
+    
     const question = input;
     setInput('');
 
-    // 2) 백엔드 요청
+    // 사용자 메시지 즉시 표시
+    setMessages(prev => [...prev, {
+      sender: 'user',
+      text: question,
+      messageId: `temp-${Date.now()}` // 임시 ID
+    }]);
+
+    // 백엔드 요청
     try {
-      const token = localStorage.getItem('token');
-      const { userId } = jwtDecode(token);
       const res = await axiosInstance.post(
-        `/chat/start/${userId}`,
+        `/chat/start/${userId}`, 
         { question },
-        { headers: { 'Content-Type': 'application/json' } }
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
       );
-      // 예: res.data.botMessage.answer, res.data.botMessage.thumbnails
-      const bot = res.data.botMessage || {};
-      const answer = bot.answer ?? '답변을 불러올 수 없어요!';
-      const thumbnails = bot.thumbnails; // [{ imgUrl, pdfUrl }, …]
-      setMessages(prev => [...prev, { sender: '잭슨', text: answer, thumbnails }]);
+      
+      const { userMessage, botMessage } = res.data;
+      const thumbnails = botMessage.thumbnails;
+      
+      // 봇 응답만 추가 (사용자 메시지는 이미 표시됨)
+      setMessages(prev => [
+        ...prev,
+        {
+          sender: '잭슨',
+          text: botMessage.answer ?? '답변을 불러올 수 없어요!',
+          messageId: botMessage.messageId,
+          thumbnails,
+        },
+      ]);
     } catch (err) {
       console.error(err);
       setMessages(prev => [
@@ -63,16 +128,21 @@ const ChatArea = () => {
     }
   };
 
+  // 엔터 키로 메시지 전송 (Shift+Enter는 제외)
   const handleKeyDown = e => {
-    if (e.key === 'Enter') handleSend();
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); // 기본 엔터 동작 방지
+      handleSend();
+    }
   };
 
   return (
     <>
       <div className="chat-area-inner">
+        {/* 메시지 출력 영역 */}
         <div className="chat-messages">
           {messages.map((msg, idx) => (
-            <div key={idx} className="chat-message-wrapper">
+            <div key={msg.messageId || msg.id || idx} className="chat-message-wrapper">
               <div
                 className={`chat-message ${
                   msg.sender === 'user' ? 'message-user' : 'message-jackson'
@@ -83,10 +153,10 @@ const ChatArea = () => {
                 {/* 좋아요 아이콘 (잭슨 메시지에만) */}
                 {msg.sender === '잭슨' && (
                   <img
-                    src={liked[idx] ? '/thumbs_fill.png' : '/thumbs_blank.png'}
+                    src={liked[msg.messageId || msg.id] ? '/thumbs_fill.png' : '/thumbs_blank.png'}
                     alt="thumbs up"
                     className="thumb-icon"
-                    onClick={() => toggleLike(idx)}
+                    onClick={() => toggleLike(msg.messageId || msg.id, liked[msg.messageId || msg.id])}
                   />
                 )}
 
@@ -103,10 +173,13 @@ const ChatArea = () => {
               </div>
             </div>
           ))}
+          <div ref={messagesEndRef} /> {/* 스크롤 위치 지정을 위한 요소 */}
         </div>
 
+        {/* 입력창 분리선 */}
         <div className="chat-input-separator" />
 
+        {/* 입력창 및 전송 버튼 */}
         <div className="chat-input-box">
           <input
             className="chat-input"

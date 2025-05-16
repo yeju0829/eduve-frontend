@@ -3,16 +3,24 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChatArea from './ChatArea';
 import './ChatPage.css';
+import { jwtDecode } from 'jwt-decode';
+import axiosInstance from '../api/axiosInstance';
 
 const ChatPage = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [historyList, setHistoryList] = useState([]);
+  const [conversations, setConversations] = useState([]); // 대화 목록: id + title + messages
+  const [selectedConvId, setSelectedConvId] = useState(null); // 선택된 대화 ID
   const [messages, setMessages] = useState([]);
 
+  // 토큰에서 userId 추출
+    const token = localStorage.getItem('token');
+    const { userId } = token ? jwtDecode(token) : {};
+
   // 사용자명 로드
+  // 1. 유저이름과 로컬 채팅 불러오기
   useEffect(() => {
     const u = localStorage.getItem('username');
     if (u) setUsername(u);
@@ -27,16 +35,103 @@ const ChatPage = () => {
     }
   }, []);
 
-  // 사이드바 열 때 지난 대화 주제
-  useEffect(() => {
-    if (sidebarOpen) {
-      fetch('/api/chat/history')
-        .then(res => res.json())
-        .then(data => setHistoryList(data.topics || []))
-        .catch(err => console.error(err));
-    }
-  }, [sidebarOpen]);
+  const [characterId, setCharacterId] = useState(null);
+  const [characterName, setCharacterName] = useState('');
+  const [characterImgUrl, setCharacterImgUrl] = useState('');
 
+  // 사이드바 열릴 때 과거 대화 주제 불러오기
+  useEffect(() => {
+    if (sidebarOpen && userId) {
+      axiosInstance.get(`/conversations/user/${userId}`)
+        .then(response => {
+          console.log('Conversations API Response:', response.data);
+          // conversationList 배열에서 데이터 추출
+          const data = response.data.conversationList || response.data;
+          
+          // 각 대화 데이터 매핑
+          const convs = data.map(conv => ({
+            id: conv.conversationId,
+            title: conv.conversationTitle || '새로운 대화',  // title이 없는 경우 기본값
+            createdAt: new Date(conv.createdAt).toLocaleDateString(),  // 날짜 포맷팅
+            messageCount: conv.messageCount || 0
+          }));
+          
+          console.log('Processed conversations:', convs);
+          setConversations(convs);
+        })
+        .catch(err => {
+          console.error('대화 목록 로딩 실패:', err.response?.data || err.message);
+          if (err.response) {
+            console.error('Error status:', err.response.status);
+            console.error('Error headers:', err.response.headers);
+          }
+          setConversations([]); // 에러 시 빈 배열로 초기화
+        });
+    } 
+  }, [sidebarOpen, userId]);
+
+  // 사이드바 닫혀있을 때 캐릭터 조회
+  useEffect(() => {
+    if (!sidebarOpen && userId) {
+      console.log('Fetching character info for userId:', userId);
+      
+      const fetchCharacterInfo = async () => {
+        try {
+          const response = await axiosInstance.get(`/userCharacter/${userId}`);
+          console.log('Character API Response:', response.data);
+          
+          const characterData = response.data;
+          if (characterData) {
+            setCharacterId(characterData.characterId);
+            setCharacterName(characterData.userCharacterName);
+            setCharacterImgUrl(characterData.userCharacterImgUrl);
+            console.log('Character data set:', {
+              id: characterData.characterId,
+              name: characterData.userCharacterName,
+              img: characterData.userCharacterImgUrl
+            });
+          }
+        } catch (err) {
+          console.error('Character info loading failed:', err);
+          if (err.response) {
+            console.error('Error status:', err.response.status);
+            console.error('Error details:', err.response.data);
+          }
+          // Set default values on error
+          setCharacterName('Unknown');
+          setCharacterImgUrl('/default-character.png');
+        }
+      };
+
+      fetchCharacterInfo();
+    }
+  }, [sidebarOpen, userId]);
+
+  // 대화주제 클릭시 채팅창에 메시지들 표시
+  const handleConversationClick = async (conversationId) => {
+    try {
+      const response = await axiosInstance.get(`/conversations/${conversationId}/messages`);
+      const messagesData = response.data.messageList;
+      
+      const msgs = messagesData.map((msg, index) => ({
+        id: msg.messageId ?? index,
+        sender: msg.userMessage ? username : '잭슨',
+        text: msg.content,
+        isLiked: msg.isLiked || false,
+      }));
+
+      setMessages(msgs);
+      setSelectedConvId(conversationId);
+    } catch (err) {
+      console.error('Failed to fetch conversation messages:', err);
+      if (err.response) {
+        console.error('Error status:', err.response.status);
+        console.error('Error details:', err.response.data);
+      }
+    }
+  };
+
+  // 5. 로그아웃 처리 함수
   const handleLogout = () => {
     localStorage.removeItem('username');
     navigate('/');
@@ -80,17 +175,39 @@ const ChatPage = () => {
         <aside className={`chat-sidebar ${sidebarOpen ? 'open' : 'collapsed'}`}>
           {!sidebarOpen ? (
             <> 
-              <img src="/dragon.png" alt="용용이" className="character-thumb" />
-              <p className="character-name">용용이</p>
+              <img
+                src={characterImgUrl || '/default-character.png'} // 이미지 URL이 없을 경우 기본 이미지 대체
+                alt={`캐릭터 ${characterName}`}
+                className="character-thumb"
+              />
+              <p className="character-name">{characterName || 'defaultName'}</p>
               <button className="sidebar-toggle" onClick={() => setSidebarOpen(true)}>&gt;&gt;</button>
             </>
           ) : (
             <>
               <button className="sidebar-toggle" onClick={() => setSidebarOpen(false)}>&lt;&lt;</button>
-              <h2 className="history-title">지난 대화 주제</h2>
-              <ul className="history-list">
-                {historyList.map((t,i)=>(<li key={i}>{t}</li>))}
-              </ul>
+              <div className="history-container">
+                <h2 className="history-title">지난 대화 주제</h2>
+                <ul className="history-list">
+                  {conversations.length > 0 ? (
+                    conversations.map((conv) => (
+                      <li
+                        key={conv.id}
+                        className={`conversation-item ${selectedConvId === conv.id ? 'selected' : ''}`}
+                        onClick={() => handleConversationClick(conv.id)}
+                      >
+                        <div className="conversation-title">{conv.title}</div>
+                        <div className="conversation-meta">
+                          <span className="conversation-date">{conv.createdAt}</span>
+                          <span className="conversation-count">{conv.messageCount}개의 메시지</span>
+                        </div>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="no-conversations">대화 내역이 없습니다</li>
+                  )}
+                </ul>
+              </div>
             </>
           )}
         </aside>
@@ -98,7 +215,13 @@ const ChatPage = () => {
         {/* 채팅 메인 */}
         <main className="chat-main">
           <div className="chat-box">
-            <ChatArea messages={messages} setMessages={setMessages} />
+            <ChatArea 
+              messages={messages} 
+              setMessages={setMessages} 
+              //onLikeMessage={handleLikeMessage}   // 좋아요 핸들러
+              //onSendMessage={handleSendMessage}   // 메시지 전송 핸들러
+              username={username}                  // 현재 사용자명
+            />
           </div>
         </main>
       </div>
