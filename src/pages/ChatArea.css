@@ -3,10 +3,11 @@
 .chat-area-inner {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: calc(100vh - 80px); /* 네비바 높이를 제외한 전체 높이 */
     padding: 20px;
-    max-height: calc(100vh - 120px); /* 네비게이션 바 등을 고려한 높이 */
-    overflow: hidden; /* 전체 컨테이너는 오버플로우 숨김 */
+    background: white;
+    position: relative;
+    overflow: hidden;
   }
   
   .chat-messages {
@@ -17,6 +18,7 @@
     flex-direction: column;
     gap: 8px;
     padding-right: 8px; /* 스크롤바 공간 확보 */
+    height: calc(100% - 60px); /* 입력창 높이를 제외한 높이 */
   }
   
   /* 스크롤바 스타일링 */
@@ -44,7 +46,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    margin-bottom: 28px; /* 좋아요 아이콘을 위한 하단 여백 증가 */
+    margin-bottom: 20px; /* 좋아요 아이콘을 위한 하단 여백 증가 */
     width: 100%;
   }
 
@@ -60,13 +62,14 @@
   /* 말풍선 */
   .chat-message {
     position: relative;
-    padding: 16px 20px;
+    padding: 20px 20px;
     border-radius: 16px;
-    max-width: 75%;
+    max-width: 85%;
     word-break: break-word;
     white-space: pre-wrap;
+    box-sizing: border-box;
     overflow-wrap: break-word;
-    font-size: 0.95rem;
+    font-size: 0.90rem;
     line-height: 1.6;
     display: inline-block;
     margin: 4px 0;             /* 말풍선 사이 간격 */
@@ -86,15 +89,16 @@
   
   /* 말풍선 안의 마크다운 스타일링 */
   .chat-message p {
-    margin: 0;                /* 기본 마진 제거 */
-    padding: 0;              /* 기본 패딩 제거 */
+    margin: 5px 0;                /* 기본 마진 제거 */
+    padding: 5px;               /* 기본 패딩 제거 */
   }
   
   .chat-message pre {
-    max-width: 100%;        /* 코드 블록이 말풍선을 넘지 않도록 */
+    max-width: 90%;        /* 코드 블록이 말풍선을 넘지 않도록 */
     overflow-x: auto;       /* 가로 스크롤 추가 */
+    overflow-y: auto;
     background: rgba(0,0,0,0.05);
-    padding: 12px;             /* 코드 블록 내부 여백 증가 */
+    padding: 30px;             /* 코드 블록 내부 여백 증가 */
     border-radius: 8px;        /* 코드 블록 모서리 둥글게 */
     margin: 8px 0;            /* 위아래 여백 증가 */
   }
@@ -110,7 +114,7 @@
   .thumb-icon {
     position: absolute;
     left: 0;
-    bottom: -28px; /* wrapper의 margin-bottom과 맞춤 */
+    bottom: -30px; /* wrapper의 margin-bottom과 맞춤 */
     width: 20px;
     height: 20px;
     cursor: pointer;
@@ -127,8 +131,11 @@
   
   /* 입력창 + 버튼 */
   .chat-input-box {
-    display: flex;
-    gap: 8px;
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 10px 0;
+    margin-top: auto;
   }
   .chat-input {
     flex: 1;

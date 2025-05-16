@@ -11,17 +11,33 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: hidden;
   background-color: #fdf8f2;
+}
+
+.navbar {
+  height: 80px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: white;
 }
 
 /* 네비게이션 아래 본문: 사이드바 + 채팅창 */
 .chat-body {
-  display: flex;
   flex: 1;
-  overflow: visible;
+  display: flex;
+  overflow: hidden;
+  height: calc(100vh - 80px);
   gap: 60px;
   padding: 24px;
   margin-right: 40px;
+}
+
+.chat-main {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
 }
 
 /* 사이드바: 캐릭터 영역 & 히스토리 */
@@ -208,8 +224,9 @@
 
 /* 대화 박스 기본 넓이 */
 .chat-box {
+  height: 100%;
+  overflow: hidden;
   width: 1100px;  /* 너비 조정 */
-  height: calc(100% - 32px);
   background-color: #fff;
   border-radius: 12px;
   display: flex;
@@ -217,7 +234,6 @@
   justify-content: space-between;
   padding: 16px;
   box-sizing: border-box;
-  flex: 1;
 }
 
 /* chat-body에 붙는 상태 클래스에 따른 chat-box 넓이 */
@@ -297,7 +313,7 @@
 .chat-send-btn:hover {
   background-color: #3A973E;
 }
-아래는 ChatArea.css코드야
+
 /* src/pages/ChatArea.css */
 
 .chat-area-inner {
