@@ -1,4 +1,4 @@
-// src/pages/CharacterPage.js
+// components/CharacterPage.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./CharacterPage.css";
@@ -43,11 +43,20 @@ const CharacterPage = () => {
   useEffect(() => {
     const storedUser = localStorage.getItem("username");
     const userId = localStorage.getItem("userId");
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      return navigate("/login");
+    }
+
     if (storedUser) setUsername(storedUser);
 
     if (userId) {
-      fetchUserCharacter(userId)
+      fetchUserCharacter(userId, token)
         .then((data) => {
+          if (!data) return;
+
           const {
             characterId,
             tone: serverTone,
@@ -92,6 +101,7 @@ const CharacterPage = () => {
   const handleLogout = () => {
     localStorage.removeItem("username");
     localStorage.removeItem("userId");
+    localStorage.removeItem("token");
     setUsername("");
     navigate("/");
   };
@@ -100,7 +110,8 @@ const CharacterPage = () => {
 
   const handleSave = () => {
     const userId = localStorage.getItem("userId");
-    if (!userId) return alert("로그인이 필요합니다.");
+    const token = localStorage.getItem("token");
+    if (!userId || !token) return alert("로그인이 필요합니다.");
 
     const toneMap = {
       "정중한 말투": "FORMAL",
@@ -116,11 +127,11 @@ const CharacterPage = () => {
       userCharacterName: customName || selectedCharacter.name,
       tone: toneMap[tone],
       descriptionLevel: levelMap[level],
-    })
+    }, token)
       .then(() => {
         alert("캐릭터 설정이 저장되었습니다.");
-        window.location.reload();
-        })
+        window.location.reload(); // 리로드 대신 상태 업데이트로 개선 가능
+      })
       .catch((err) => console.error("저장 실패:", err));
   };
 
@@ -253,21 +264,5 @@ const CharacterPage = () => {
     </div>
   );
 };
-
-const test = async () => {
-  const userId = "testuser1";
-  try {
-    // 저장 테스트
-    await updateUserCharacter(userId, { characterId: 1, name: "Test Character" });
-    console.log("저장 성공");
-
-    // 불러오기 테스트
-    const data = await fetchUserCharacter(userId);
-    console.log("불러온 데이터:", data);
-  } catch (err) {
-    console.error(err);
-  }
-};
-test();
 
 export default CharacterPage;
