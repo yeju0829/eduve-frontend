@@ -15,7 +15,7 @@ const markdownComponents = {
     <p style={{ margin: '2px 0', lineHeight: '1.4' }} {...props} />
   ),
   ul: ({node, ...props}) => (
-    <ul style={{ margin: '1px 0', paddingLeft: '50px' }} {...props} />
+    <ul style={{ margin: '1px 0', paddingLeft: '30px' }} {...props} />
   ),
   ol: ({node, ...props}) => (
     <ol
@@ -163,13 +163,16 @@ const ChatArea = ({ messages, setMessages, username }) => {
       );
       
       const { botMessage, fileNameAndUrl } = res.data;
-      const filePreview = fileNameAndUrl && fileNameAndUrl.length === 3
-        ? {
-            url: fileNameAndUrl[2],
-            page: parseInt(fileNameAndUrl[1], 10) || 1,
-            title: fileNameAndUrl[0],
-          }
-        : null;
+      let filePreview = null;
+
+      // fileNameAndUrl이 있을 때만 filePreview 설정
+      if (fileNameAndUrl && fileNameAndUrl.length === 3) {
+        filePreview = {
+          url: fileNameAndUrl[2],
+          page: parseInt(fileNameAndUrl[1], 10) || 1,
+          title: fileNameAndUrl[0],
+        };
+      }
       
       // 봇 응답만 추가 (사용자 메시지는 이미 표시됨)
       setMessages(prev => [
@@ -178,7 +181,7 @@ const ChatArea = ({ messages, setMessages, username }) => {
           sender: '잭슨',
           text: botMessage.answer ?? '답변을 불러올 수 없어요!',
           messageId: botMessage.messageId,
-          pdfPreview: filePreview,
+          pdfPreview: filePreview,  // filePreview가 null이면 미리보기가 표시되지 않음
         },
       ]);
     } catch (err) {
@@ -213,11 +216,10 @@ const ChatArea = ({ messages, setMessages, username }) => {
               className={`chat-message-wrapper ${msg.userMessage ? 'user' : ''}`}
             >
               <div
-                className={`chat-message ${
-                  msg.userMessage ? 'message-user' : 'message-jackson'
-                }`}
+                className={`chat-message ${msg.userMessage ? 'message-user' : 'message-jackson'}`}
+                style={msg.pdfPreview?.url ? { marginBottom: '24px' } : {}}
               >
-                <ReactMarkdown components={markdownComponents}>{msg.text}</ReactMarkdown>
+                {msg.text.split('\n\n').map((paragraph, idx) => (<ReactMarkdown key={idx} components={markdownComponents}>{paragraph}</ReactMarkdown>))}
 
                 {!msg.userMessage && !msg.isInitialMessage && (
                   <img
@@ -232,12 +234,21 @@ const ChatArea = ({ messages, setMessages, username }) => {
                 {msg.pdfPreview?.url && (
                   <div
                     style={{
-                      marginTop: '6px',
-                      color: 'blue',
+                      marginTop: '12px',
+                      color: '#1B512D',
                       textDecoration: 'underline',
                       cursor: 'pointer',
+                      fontSize: '0.9rem',
+                      borderTop: '1px solid rgba(0,0,0,0.1)',
+                      paddingTop: '12px',
+                      paddingBottom: '12px',
+                      paddingLeft: '17px',
+                      paddingRight: '4px',
+                      transition: 'background-color 0.2s',
                     }}
                     onClick={() => openPdfPreview(msg.pdfPreview.url, msg.pdfPreview.title, msg.pdfPreview.page)}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(27, 81, 45, 0.05)'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     📄 {msg.pdfPreview.title
                       ? `${msg.pdfPreview.title} - ${msg.pdfPreview.page}쪽 확인하기`
