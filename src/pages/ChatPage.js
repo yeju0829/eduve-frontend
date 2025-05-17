@@ -26,13 +26,13 @@ const ChatPage = () => {
     if (u) setUsername(u);
 
     // 초기 메시지 로드 (로컬 또는 API)
-    const saved = localStorage.getItem('chatMessages');
-    if (saved) {
-      setMessages(JSON.parse(saved));
-    } else {
+    //const saved = localStorage.getItem('chatMessages');
+    //if (saved) {
+    //  setMessages(JSON.parse(saved));
+    //} else {
       // 최초 Jackson 인사
-      setMessages([{ sender: '잭슨', text: '안녕! 궁금한 걸 물어봐' }]);
-    }
+      //setMessages([{ sender: '잭슨', text: '안녕하세요! 저에게 궁금한 점이 있다면 무엇이든 물어보세요😊' }]);
+    //}
   }, []);
 
   const [characterId, setCharacterId] = useState(null);

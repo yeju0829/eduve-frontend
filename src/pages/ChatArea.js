@@ -57,15 +57,16 @@ const ChatArea = ({ messages, setMessages, username }) => {
   useEffect(() => {
     const initialMessage = {
       sender: '잭슨',
-      text: '안녕하세요! 저에게 =궁금한 점이 있다면 무엇이든 물어보세요.😊',
+      text: '안녕하세요! 저에게 궁금한 점이 있다면 무엇이든 물어보세요.😊',
       messageId: 'initial-message',
       isInitialMessage: true
     };
 
-    if (messages.length === 0) {
+    // 메시지가 없을 때만 초기 메시지 설정
+    if (!messages || messages.length === 0) {
       setMessages([initialMessage]);
     }
-  }, [setMessages]); // messages 의존성 제거
+  }, []); // 컴포넌트 마운트 시 한 번만 실행
 
   // 스크롤 자동 이동 함수
   const scrollToBottom = () => {
@@ -84,7 +85,9 @@ const ChatArea = ({ messages, setMessages, username }) => {
 
   // 대화 기록을 로컬스토리지에 저장
   useEffect(() => {
-    localStorage.setItem('chatMessages', JSON.stringify(messages));
+    if (messages && messages.length > 0) {
+      localStorage.setItem('chatMessages', JSON.stringify(messages));
+    }
   }, [messages]);
 
 
