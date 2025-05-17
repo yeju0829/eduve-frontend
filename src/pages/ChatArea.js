@@ -151,7 +151,10 @@ const ChatArea = ({ messages, setMessages, username }) => {
     <>
       <div className="chat-area-inner">
         <SimpleBar
-          style={{ maxHeight: 'calc(100% - 60px)', paddingRight: '18px' }}
+          style={{ 
+            height: 'calc(100vh - 180px)',  // 전체 높이에서 헤더(80px) + 하단여백(100px) 제외
+            paddingRight: '18px'
+          }}
         >
           {messages.map((msg, idx) => (
             <div
