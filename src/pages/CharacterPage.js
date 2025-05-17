@@ -55,6 +55,7 @@ const CharacterPage = () => {
     if (userId) {
       fetchUserCharacter(userId, token)
         .then((data) => {
+          console.log("서버에서 받은 캐릭터 설정:", data);
           if (!data) return;
 
           const {
@@ -130,7 +131,7 @@ const CharacterPage = () => {
     }, token)
       .then(() => {
         alert("캐릭터 설정이 저장되었습니다.");
-        window.location.reload(); // 리로드 대신 상태 업데이트로 개선 가능
+        setCustomName(customName || selectedCharacter.name);
       })
       .catch((err) => console.error("저장 실패:", err));
   };
