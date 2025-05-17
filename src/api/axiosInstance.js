@@ -2,7 +2,7 @@ import axios from "axios";
 
 // 기본 axios 인스턴스 만들기
 const axiosInstance = axios.create({
-  baseURL: "http://15.164.97.117:8080", // API 주소
+  baseURL: "http://15.165.205.11:8080", // API 주소
 });
 
 // 요청마다 토큰 붙이기
