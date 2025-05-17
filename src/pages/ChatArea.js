@@ -3,15 +3,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import axiosInstance from '../api/axiosInstance';
 import { jwtDecode } from 'jwt-decode';
 import ReactMarkdown from 'react-markdown';
+import { Document, Page, pdfjs } from 'react-pdf';
 import './ChatArea.css';
+
+import SimpleBar from 'simplebar-react';
+import 'simplebar-react/dist/simplebar.min.css';
 
 const ChatArea = ({ messages, setMessages, username }) => {
   const [input, setInput] = useState(''); // 입력창 상태
   const [liked, setLiked] = useState({}); // 좋아요 상태
-  const [previewPdfUrl, setPreviewPdfUrl] = useState(null); // PDF 미리보기 URL 상태
+  const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
+
 
   const [loading, setLoading] = useState(false);
-
   // 메시지 목록을 참조하기 위한 ref 추가
   const messagesEndRef = useRef(null);
 
@@ -72,8 +76,8 @@ const ChatArea = ({ messages, setMessages, username }) => {
   };
 
 
-  // PDF 모달 열기/닫기
-  const openPdfPreview = url => {
+  // 변경: url + page 객체 받기
+  const openPdfPreview = (url) => {
     setPreviewPdfUrl(url);
   };
   const closePdfPreview = () => {
@@ -91,7 +95,8 @@ const ChatArea = ({ messages, setMessages, username }) => {
     setMessages(prev => [...prev, {
       sender: 'user',
       text: question,
-      messageId: `temp-${Date.now()}` // 임시 ID
+      messageId: `temp-${Date.now()}`,
+      userMessage: true,
     }]);
 
     // 백엔드 요청
@@ -106,8 +111,14 @@ const ChatArea = ({ messages, setMessages, username }) => {
         }
       );
       
-      const { userMessage, botMessage } = res.data;
-      const thumbnails = botMessage.thumbnails;
+      const { botMessage, fileNameAndUrl } = res.data;
+      const filePreview = fileNameAndUrl && fileNameAndUrl.length === 3
+        ? {
+            url: fileNameAndUrl[2],
+            page: parseInt(fileNameAndUrl[1], 10) || 1,
+            title: fileNameAndUrl[0],
+          }
+        : null;
       
       // 봇 응답만 추가 (사용자 메시지는 이미 표시됨)
       setMessages(prev => [
@@ -116,7 +127,7 @@ const ChatArea = ({ messages, setMessages, username }) => {
           sender: '잭슨',
           text: botMessage.answer ?? '답변을 불러올 수 없어요!',
           messageId: botMessage.messageId,
-          thumbnails,
+          pdfPreview: filePreview,
         },
       ]);
     } catch (err) {
@@ -139,8 +150,9 @@ const ChatArea = ({ messages, setMessages, username }) => {
   return (
     <>
       <div className="chat-area-inner">
-        {/* 메시지 출력 영역 */}
-        <div className="chat-messages">
+        <SimpleBar
+          style={{ maxHeight: 'calc(100% - 60px)', paddingRight: '18px' }}
+        >
           {messages.map((msg, idx) => (
             <div
               key={msg.messageId || msg.id || idx}
@@ -162,53 +174,89 @@ const ChatArea = ({ messages, setMessages, username }) => {
                   />
                 )}
 
-                {msg.thumbnails?.map((t, i) => (
-                  <img
-                    key={i}
-                    src={t.imgUrl}
-                    alt="pdf preview"
-                    className="pdf-thumbnail"
-                    onClick={() => openPdfPreview(t.pdfUrl)}
-                  />
-                ))}
+                {/* PDF 링크로 변경 */}
+                {msg.pdfPreview?.url && (
+                  <div
+                    style={{
+                      marginTop: '6px',
+                      color: 'blue',
+                      textDecoration: 'underline',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => openPdfPreview(msg.pdfPreview.url, msg.pdfPreview.title, msg.pdfPreview.page)}
+                  >
+                    📄 {msg.pdfPreview.title
+                      ? `${msg.pdfPreview.title} - ${msg.pdfPreview.page}쪽 확인하기`
+                      : `PDF 파일 - ${msg.pdfPreview.page}쪽 확인하기`}
+                  </div>
+                )}
               </div>
             </div>
           ))}
-          <div ref={messagesEndRef} /> {/* 스크롤 위치 지정을 위한 요소 */}
-        </div>
+          <div ref={messagesEndRef} />
+        </SimpleBar>
 
-        {/* 입력창 분리선 */}
-        <div className="chat-input-separator" />
-
-        {/* 입력창 및 전송 버튼 */}
-        <div className="chat-input-box">
-          <input
-            className="chat-input"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="질문을 입력하세요..."
-          />
-          <button className="chat-send-btn" onClick={handleSend}>
-            전송
-          </button>
+        <div className="chat-input-wrapper">
+          <div className="chat-input-separator" />
+          <div className="chat-input-box">
+            <input
+              className="chat-input"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="질문을 입력하세요..."
+            />
+            <button className="chat-send-btn" onClick={handleSend}>
+              전송
+            </button>
+          </div>
         </div>
       </div>
 
       {/* PDF 미리보기 모달 */}
       {previewPdfUrl && (
-        <div className="modal-overlay" onClick={closePdfPreview}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div
+          className="modal-overlay"
+          onClick={closePdfPreview}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '80vw',
+              height: '90vh',
+              backgroundColor: 'white',
+              borderRadius: 8,
+              position: 'relative',
+              padding: 10,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            }}
+          >
+            <button
+              onClick={closePdfPreview}
+              style={{ position: 'absolute', top: 10, right: 10, cursor: 'pointer' }}
+            >
+              닫기
+            </button>
             <iframe
               src={previewPdfUrl}
-              title="PDF Viewer"
+              title="PDF Preview"
               width="100%"
               height="100%"
               style={{ border: 'none' }}
             />
-            <button className="close-btn" onClick={closePdfPreview}>
-              닫기
-            </button>
           </div>
         </div>
       )}
