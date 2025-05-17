@@ -115,7 +115,7 @@
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 90%;  /* 구분선 너비 */
+  width: 80%;  /* 구분선 너비 */
   height: 1px;
   background-color: #e0e0e0;
 }
@@ -171,7 +171,7 @@
 }
 
 .conversation-item.selected {
-  background-color: #e3f2fd;
+  background-color: rgba(248, 225, 222, 0.7);  /* #F8E1DE with 70% opacity */
 }
 
 .conversation-title {
@@ -358,8 +358,8 @@
     position: absolute;
     bottom: -3px;
     right: -30px;
-    width: 30px;
-    height: 30px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
     user-select: none;
   }

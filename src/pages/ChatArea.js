@@ -170,7 +170,7 @@ const ChatArea = ({ messages, setMessages, username }) => {
 
                 {!msg.userMessage && (
                   <img
-                    src={liked[msg.messageId || msg.id] ? '/thumbs_fill.png' : '/thumbs_blank.png'}
+                    src={liked[msg.messageId || msg.id] ? '/heart.png' : '/heart_empty.png'}
                     alt="thumbs up"
                     className="thumb-icon"
                     onClick={() => toggleLike(msg.messageId || msg.id, liked[msg.messageId || msg.id])}
