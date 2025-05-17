@@ -9,15 +9,63 @@ import './ChatArea.css';
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 
+// 마크다운 커스텀 컴포넌트
+const markdownComponents = {
+  p: ({node, ...props}) => (
+    <p style={{ margin: '2px 0', lineHeight: '1.4' }} {...props} />
+  ),
+  ul: ({node, ...props}) => (
+    <ul style={{ margin: '1px 0', paddingLeft: '50px' }} {...props} />
+  ),
+  ol: ({node, ...props}) => (
+    <ol
+      style={{
+        margin: '2px 0',
+        paddingLeft: '40px',
+        listStylePosition: 'outside',
+        lineHeight: '1.6',
+      }}
+      {...props}
+    />
+  ),
+  li: ({node, ...props}) => (
+    <li
+      style={{
+        margin: '-12px 0',
+        lineHeight: '1.5',
+        listStylePosition: 'inside',
+        display: 'list-item', // 필수
+        verticalAlign: 'middle', // 숫자-텍스트 정렬 개선
+      }}
+      {...props}
+    />
+  ),
+  // 줄바꿈 간격 조정
+  break: ({node, ...props}) => (
+    <br style={{ marginBottom: '2px' }} {...props} />
+  ),
+};
+
 const ChatArea = ({ messages, setMessages, username }) => {
   const [input, setInput] = useState(''); // 입력창 상태
   const [liked, setLiked] = useState({}); // 좋아요 상태
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
-
-
   const [loading, setLoading] = useState(false);
-  // 메시지 목록을 참조하기 위한 ref 추가
   const messagesEndRef = useRef(null);
+
+  // 초기 메시지 설정
+  useEffect(() => {
+    const initialMessage = {
+      sender: '잭슨',
+      text: '안녕하세요! 저에게 =궁금한 점이 있다면 무엇이든 물어보세요.😊',
+      messageId: 'initial-message',
+      isInitialMessage: true
+    };
+
+    if (messages.length === 0) {
+      setMessages([initialMessage]);
+    }
+  }, [setMessages]); // messages 의존성 제거
 
   // 스크롤 자동 이동 함수
   const scrollToBottom = () => {
@@ -166,9 +214,9 @@ const ChatArea = ({ messages, setMessages, username }) => {
                   msg.userMessage ? 'message-user' : 'message-jackson'
                 }`}
               >
-                <ReactMarkdown>{msg.text}</ReactMarkdown>
+                <ReactMarkdown components={markdownComponents}>{msg.text}</ReactMarkdown>
 
-                {!msg.userMessage && (
+                {!msg.userMessage && !msg.isInitialMessage && (
                   <img
                     src={liked[msg.messageId || msg.id] ? '/heart.png' : '/heart_empty.png'}
                     alt="thumbs up"
