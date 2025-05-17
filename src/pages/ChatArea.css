@@ -84,6 +84,7 @@
     line-height: 1.6;
     display: inline-block;
     margin: 4px 0;
+    text-align: justify;  /* 텍스트 양쪽 정렬 */
 }
 
 .message-user {
@@ -97,17 +98,19 @@
     color: #000;
     align-self: flex-start;
     margin-left: 16px;
+    margin-right: 20px;
     position: relative;  /* thumbs의 기준점으로 설정 */
 }
   
 /* 말풍선 안의 마크다운 스타일링 */
 .chat-message p {
     margin: 5px 0;
-    padding: 5px 16px;  /* 좌우 패딩 늘림 */
+    padding: 5px 20px;  /* 좌우 패딩 20px로 통일 */
+    text-align: justify;  /* 문단도 양쪽 정렬 */
 }
 
 .message-jackson p {
-    padding: 12px 20px;  /* 상하 12px, 좌우 20px로 패딩 증가 */
+    padding: 12px 20px;  /* 상하 12px, 좌우 20px로 통일 */
 }
   
 .chat-message pre {

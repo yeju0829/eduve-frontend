@@ -243,7 +243,7 @@ const ChatArea = ({ messages, setMessages, username }) => {
                       paddingTop: '12px',
                       paddingBottom: '12px',
                       paddingLeft: '17px',
-                      paddingRight: '4px',
+                      paddingRight: '17px',  /* 오른쪽 패딩도 왼쪽과 동일하게 */
                       transition: 'background-color 0.2s',
                     }}
                     onClick={() => openPdfPreview(msg.pdfPreview.url, msg.pdfPreview.title, msg.pdfPreview.page)}
