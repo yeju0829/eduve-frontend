@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./CharacterPage.css";
 import {
-  fetchAllCharacters,
   fetchUserCharacter,
   updateUserCharacter,
 } from "../api/CharacterApi";
@@ -118,7 +117,10 @@ const CharacterPage = () => {
       tone: toneMap[tone],
       descriptionLevel: levelMap[level],
     })
-      .then(() => alert("캐릭터 설정이 저장되었습니다."))
+      .then(() => {
+        alert("캐릭터 설정이 저장되었습니다.");
+        window.location.reload();
+        })
       .catch((err) => console.error("저장 실패:", err));
   };
 
@@ -251,5 +253,21 @@ const CharacterPage = () => {
     </div>
   );
 };
+
+const test = async () => {
+  const userId = "testuser1";
+  try {
+    // 저장 테스트
+    await updateUserCharacter(userId, { characterId: 1, name: "Test Character" });
+    console.log("저장 성공");
+
+    // 불러오기 테스트
+    const data = await fetchUserCharacter(userId);
+    console.log("불러온 데이터:", data);
+  } catch (err) {
+    console.error(err);
+  }
+};
+test();
 
 export default CharacterPage;

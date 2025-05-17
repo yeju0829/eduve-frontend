@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "https://your.api.server"; // ← 실제 백엔드 주소로 변경
+const BASE_URL = "http://15.165.205.11:8080";
 
 // 1. 전체 캐릭터 목록 가져오기 (/characters)
 export const fetchAllCharacters = async () => {
@@ -14,7 +14,7 @@ export const fetchAllCharacters = async () => {
 };
 
 // 2. 개별 캐릭터 정보 가져오기 (/characters/{id})
-export const fetchCharacterById = async (characterId) => {
+export const fetchCharacterDetail = async (characterId) => {
   try {
     const response = await axios.get(`${BASE_URL}/characters/${characterId}`);
     return response.data;
