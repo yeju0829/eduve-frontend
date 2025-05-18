@@ -3,94 +3,203 @@
 .chat-area-inner {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    padding: 20px 20px 20px 20px;
-  }
+    height: calc(100vh - 80px);  /* 전체 높이 더 줄임 */
+    position: relative;
+    background: white;
+    padding-bottom: 100px;  /* 하단 여백 줄임 */
+}
   
-  .chat-messages {
+.chat-messages {
     flex: 1;
     overflow-y: auto;
-    margin-bottom: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    overflow-y: auto;
-  }
+    padding-right: 8px;
+    padding-top: 120px;  /* 상단 패딩 더 증가 */
+    padding-bottom: 20px;
+}
   
-  /* 래퍼는 풀 너비, 버블 너비는 max-width:75% */
-  .chat-message-wrapper {
+/* SimpleBar 커스터마이징 */
+.simplebar-track.simplebar-vertical {
+    top: 100px !important;     /* 스크롤바 트랙 시작 위치 더 증가 */
+    bottom: 40px !important;  /* 스크롤바 트랙 끝 위치 유지 */
+    height: auto !important;
+    background: #f1f1f1;
+    border-radius: 8px;
+}
+
+.simplebar-scrollbar:before {
+    background-color: #888; /* 스크롤바 thumb 색상 */
+    border-radius: 8px;     /* 둥근 모서리 */
+}
+
+.simplebar-scrollbar:hover:before {
+    background-color: #555;
+}
+
+/* 스크롤바 너비 조절 */
+.simplebar-scrollbar {
+    width: 8px !important;
+    margin-top: 6px !important;
+    margin-bottom: 6px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* 트랙 배경 없애기 또는 스타일링 */
+.simplebar-track {
+    background: #f1f1f1; 
+    border-radius: 8px;
+    margin: 4px 0;
+}
+  
+/* 말풍선 애니메이션 키프레임 */
+@keyframes messageAppear {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 래퍼는 풀 너비, 버블 너비는 max-width:75% */
+.chat-message-wrapper {
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    margin-bottom: 4px;
+    margin-bottom: 16px;
     width: 100%;
-  }
+    animation: messageAppear 0.3s ease-out forwards;  /* 부드러운 등장 애니메이션 */
+}
   
-  /* 말풍선 */
-  .chat-message {
-    position: relative;          /* thumbs 위치 기준 */
-    padding: 8px 12px;
-    border-radius: 12px;
+/* 사용자 메시지 wrapper */
+.chat-message-wrapper.user {
+    align-items: flex-end; /* 사용자 메시지는 오른쪽 정렬 */
+}
+
+.chat-message-wrapper.user .thumb-icon {
+    display: none; /* 사용자 메시지에는 좋아요 아이콘 숨김 */
+}
+  
+/* 말풍선 */
+.chat-message {
+    position: relative;
+    padding: 20px 20px;
+    border-radius: 16px;
     max-width: 75%;
     word-break: break-word;
-    font-size: 0.95rem;
-    line-height: 1.4;
+    white-space: pre-wrap;
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+    font-size: 0.90rem;
+    line-height: 1.6;
     display: inline-block;
-  }
-  .message-user {
-    background-color: #fbece8;
-    color: #fff;
-    display: inline-block;
-    margin-left: auto;
-  }
-  .message-jackson {
+    margin: 4px 0;
+    text-align: justify;  /* 텍스트 양쪽 정렬 */
+}
+
+.message-user {
+    background-color: rgba(248, 225, 222, 0.7); /* #F8E1DE with 70% opacity */
+    color: #000;
+    align-self: flex-end;
+}
+
+.message-jackson {
     background-color: #e5e7eb;
     color: #000;
     align-self: flex-start;
-  }
+    margin-left: 16px;
+    margin-right: 20px;
+    position: relative;  /* thumbs의 기준점으로 설정 */
+}
   
-  /* thumbs: 말풍선 바로 아래 우측 */
-  .thumb-icon {
+/* 말풍선 안의 마크다운 스타일링 */
+.chat-message p {
+    margin: 5px 0;
+    padding: 5px 20px;  /* 좌우 패딩 20px로 통일 */
+    text-align: justify;  /* 문단도 양쪽 정렬 */
+}
+
+.message-jackson p {
+    padding: 12px 20px;  /* 상하 12px, 좌우 20px로 통일 */
+}
+  
+.chat-message pre {
+    max-width: 90%;        /* 코드 블록이 말풍선을 넘지 않도록 */
+    overflow-x: auto;       /* 가로 스크롤 추가 */
+    overflow-y: auto;
+    background: rgba(0,0,0,0.05);
+    padding: 30px;             /* 코드 블록 내부 여백 증가 */
+    border-radius: 8px;        /* 코드 블록 모서리 둥글게 */
+    margin: 8px 0;            /* 위아래 여백 증가 */
+}
+  
+.chat-message code {
+    font-family: monospace;
+    background: rgba(0,0,0,0.05);
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+  
+/* Thumbs 아이콘 위치 설정 */
+.message-jackson + .thumb-icon {
     position: absolute;
-    top: 55px;
-    left: -4px;
-    width: 25px;
-    height: 25px;
+    left: 4px;  /* 말풍선 왼쪽에 맞춤 */
+    top: 100%;  /* 말풍선 바로 아래부터 시작 */
+    margin-top: 4px;  /* 말풍선과의 간격 */
+    width: 20px;
+    height: 20px;
     cursor: pointer;
     user-select: none;
-  }
+}
   
-  /* 입력창 구분선 */
-  .chat-input-separator {
+/* 입력창 구분선 */
+.chat-input-separator {
     height: 1px;
     background-color: #eee;
-    margin: 8px 0;
-  }
+    margin: 0;  /* 구분선 마진 제거 */
+}
   
-  /* 입력창 + 버튼 */
-  .chat-input-box {
+/* 입력창 영역 */
+.chat-input-wrapper {
+    position: sticky;
+    bottom: -16px;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 0px 16px 18px 16px;  /* 상단 패딩 더 줄임 */
+    margin-top: auto;
+    z-index: 10;
+}
+  
+/* 입력창 + 버튼 */
+.chat-input-box {
     display: flex;
     gap: 8px;
-  }
-  .chat-input {
+    width: 100%;
+    padding: 0px 0 2px 0;  /* 상하 패딩 더 줄임 */
+    background: white;
+}
+.chat-input {
     flex: 1;
     padding: 8px;
     border: 1px solid #ccc;
-    border-radius: 8px;
+    border-radius: 30px;  /* 모서리 더 둥글게 */
     outline: none;
-  }
-  .chat-send-btn {
+}
+.chat-send-btn {
     background-color: #1B512D;
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 16px;  /* 전송 버튼도 같이 둥글게 */
     padding: 8px 16px;
     cursor: pointer;
-  }
-  .chat-send-btn:hover {
+}
+.chat-send-btn:hover {
     background-color: #3A973E;
-  }
+}
 
 /* ─── PDF 미리보기 모달 ─── */
 .modal-overlay {
@@ -125,5 +234,11 @@
 }
 .close-btn:hover {
     background: #3A973E;
+}
+  
+/* SimpleBar 스크롤 영역 패딩 조정 */
+.simplebar-content {
+    padding-top: 100px !important;    /* 상단 여백 더 증가 */
+    padding-bottom: 40px !important; /* 하단 여백 */
 }
   

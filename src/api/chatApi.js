@@ -1,7 +1,7 @@
 // src/api/chatApi.js
 import axios from 'axios';
 
-const BASE_URL = 'http://15.164.97.117:8080';
+const BASE_URL = 'http://15.165.205.11:8080';
 
 // ✅ 인증 헤더 생성 함수 재사용
 const getAuthHeaders = () => {

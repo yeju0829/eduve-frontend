@@ -25,7 +25,7 @@ const MainPage = () => {
         <h1 className="logo">
           <span className="edu">Edu'</span>
           <span className="ve">ve</span>
-          <span classNAme="com">.com</span>
+          <span className="com">.com</span>
         </h1>
         <div className="nav-links">
           <span onClick={() => navigate("/character")}>캐릭터</span>
