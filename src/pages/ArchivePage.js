@@ -408,7 +408,7 @@ export default function ArchivePage() {
           {/* 파일 리스트 */}
           <div className="file-list">
             {displayFiles.length === 0 && displayFolders.length === 0 && !searchActive && (
-              <div className="no-results">아직 업로드된 파일이나 폴더가 없습니다.</div>
+              <div className="no-results"></div>
             )}
             {displayFiles.map(file => (
               <div
