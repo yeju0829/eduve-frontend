@@ -11,16 +11,28 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: hidden;
   background-color: #fdf8f2;
+}
+
+/* 네비게이션 바 */
+.navbar {
+  height: 80px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: white;
 }
 
 /* 네비게이션 아래 본문: 사이드바 + 채팅창 */
 .chat-body {
-  display: flex;
   flex: 1;
-  overflow: visible;
+  display: flex;
+  overflow: hidden;
+  height: calc(100vh - 80px);
   gap: 60px;
   padding: 24px;
+  margin-right: 40px;
 }
 
 /* 사이드바: 캐릭터 영역 & 히스토리 */
@@ -55,13 +67,14 @@
 /* 토글 버튼 */
 .sidebar-toggle {
   position: absolute;
-  top: 16px;
-  left: 16px;
+  top: 8px;
+  left: 8px;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   color: #1B512D;
+  z-index: 1;
 }
 
 /* 캐릭터 썸네일 */
@@ -82,13 +95,29 @@
 
 /* 지난 대화 주제 제목 */
 .history-title {
-  display: inline-block;
-  position: static;
-  vertical-align: middle;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  text-align: center;
   margin: 0;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #222;
+  padding: 16px;
+  font-size: 1.2em;
+  color: #333;
+  background: #fff;
+  position: relative;
+}
+
+/* 구분선 */
+.history-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;  /* 구분선 너비 */
+  height: 1px;
+  background-color: #e0e0e0;
 }
 
 /* 토글 버튼과 제목을 같은 라인에 배치 */
@@ -98,69 +127,116 @@
   vertical-align: middle;
 }
 
+/* 지난 대화 주제 리스트 컨테이너 */
+.history-container {
+  margin-top: 48px;
+  width: 100%;
+  height: calc(100% - 80px);
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+}
+
 /* 지난 대화 주제 리스트 */
 .history-list {
   list-style: none;
+  padding: 16px;
   margin: 0;
-  padding-left: 16px;
-  padding-bottom: 16px;
   width: 100%;
-  height: 700px;
-  background: #e5e7eb;
+  height: calc(100% - 53px);
   overflow-y: auto;
   box-sizing: border-box;
-  border-radius: 10px;
-  margin-top: 8px;  /* 제목과 리스트 사이 공간 최소화 */
+  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
 }
 
-/* 리스트 아이템 */
-.history-list li {
-  padding: 8px;
-  margin-bottom: 4px;
-  background: #fff;
-  border-radius: 8px;
+/* Webkit 브라우저용 스크롤바 숨김 */
+.history-list::-webkit-scrollbar {
+  display: none;
+}
+
+/* 대화 항목들 스타일 조정 */
+.conversation-item {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
   cursor: pointer;
+  transition: background-color 0.2s;
+  border-radius: 8px;
+  text-align: center;  /* 내용 중앙 정렬 */
 }
 
-/* 마지막 아이템 아래 추가 여백 */
-.history-list li:last-child {
-  margin-bottom: 16px;
+.conversation-item:hover {
+  background-color: #f8f9fa;
+}
+
+.conversation-item:last-child {
+  border-bottom: none;
+}
+
+.conversation-item.selected {
+  background-color: rgba(248, 225, 222, 0.7);  /* #F8E1DE with 70% opacity */
+}
+
+.conversation-title {
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #333;
+  text-align: center;  /* 제목 중앙 정렬 */
+}
+
+.conversation-meta {
+  display: flex;
+  justify-content: center;  /* 메타 정보 중앙 정렬 */
+  gap: 16px;  /* 날짜와 메시지 수 사이 간격 */
+  font-size: 0.8em;
+  color: #666;
+}
+
+.conversation-date {
+  color: #888;
+}
+
+.conversation-count {
+  color: #666;
+}
+
+.no-conversations {
+  text-align: center;  /* "대화 내역이 없습니다" 메시지도 중앙 정렬 */
+  padding: 20px;
+  color: #666;
 }
 
 /* 오른쪽 채팅 영역 */
-.chat-right {
+.chat-main {
   flex: 1;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-width: 0;
   overflow: hidden;
-  height: 100%;
+  position: relative;
 }
 
 /* 대화 박스 기본 넓이 */
 .chat-box {
-  width: 1200px;
-  height: calc(100% - 32px);
+  height: 96%;
+  overflow: hidden;
+  width: 1100px;  /* 너비 조정 */
   background-color: #fff;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   padding: 16px;
   box-sizing: border-box;
-  flex: 1;
 }
 
 /* chat-body에 붙는 상태 클래스에 따른 chat-box 넓이 */
 .chat-body.sidebar-closed .chat-box {
-  width: 1100px !important;
+  width: 1000px !important;  /* 사이드바 닫힘 상태일 때 너비 */
 }
 
 .chat-body.sidebar-open .chat-box {
-  width: 1250px !important;
+  width: 1150px !important;
 }
 
 /* 내부 채팅 영역 */
@@ -289,8 +365,8 @@
     position: absolute;
     bottom: -3px;
     right: -30px;
-    width: 30px;
-    height: 30px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
     user-select: none;
   }
