@@ -124,7 +124,7 @@
   width: 20px;
   height: 20px;
   border: none;
-  background: url('C:\Users\root\Documents\eduve_fe\eduve-frontend\public\search-button.png') no-repeat center / cover;
+  background: url('C:\Users\hhj02\eduve-frontend\public\search-button.png') no-repeat center / cover;
   cursor: pointer;
   background-color: transparent;
   padding: 0;
@@ -201,9 +201,11 @@
   font-weight: bold;
   color: #1B512D;
   margin-bottom: 30px;
-  padding-left: 40px;
+  padding-left: 30px;
   padding-bottom: 8px;
   border-bottom: 1px solid #ccc;
+  max-width: 1050px;
+  margin-left: 40px;
 }
 .path-link {
   cursor: pointer;
@@ -213,7 +215,7 @@
 .sort-toggle {
   position: absolute;
   top: 0;
-  right: 0;
+  left: 1000px;
   background: none;
   border: none;
   font-size: 0.9rem;
@@ -228,8 +230,8 @@
 
 .sort-dropdown {
   position: absolute;
-  top: 24px;
-  right: 0;
+  top: 30px;
+  left: 990px;
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 6px;
@@ -258,6 +260,7 @@
   gap: 30px 80px;
   flex-wrap: wrap;
   margin-top: 20px;
+  padding-left: 40px;
 }
 .folder-box,
 .file-box {
@@ -340,11 +343,11 @@
 }
 .modal-content {
   position: fixed !important;
-  top: 138px !important;
-  left: 405px !important;
-  right: 50px !important;
-  bottom: 0 !important;
-  max-width: 1278px;
+  top: 135px !important;
+  left: 445px !important;
+  right: 200px !important;
+  bottom: 100px !important;
+  max-width: 900px;
   height: auto;
   background: #EAEAEA !important;
   border-radius: 10px !important;
@@ -352,6 +355,7 @@
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
+  padding: 20px;
 }
 
 .modal-content iframe {

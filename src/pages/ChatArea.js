@@ -300,8 +300,8 @@ const ChatArea = ({ messages, setMessages, username }) => {
             className="modal-content"
             onClick={(e) => e.stopPropagation()}
             style={{
-              width: '80vw',
-              height: '90vh',
+              width: '85vw',
+              height: '80vh',
               backgroundColor: 'white',
               borderRadius: 8,
               position: 'relative',
@@ -319,7 +319,7 @@ const ChatArea = ({ messages, setMessages, username }) => {
               src={previewPdfUrl}
               title="PDF Preview"
               width="100%"
-              height="100%"
+              height="90%"
               style={{ border: 'none' }}
             />
           </div>
