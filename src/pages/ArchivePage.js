@@ -179,23 +179,26 @@ export default function ArchivePage() {
     }
   };
 
-  // — 검색 핸들러
-  const handleSearch = async () => {
-    if (!searchText.trim()) return;
-    try {
-      const res = await searchFiles(searchText.trim());
-      setSearchResults(res.data);
-    } catch (err) {
-      console.error('검색 실패', err);
-      alert('검색에 실패했습니다.');
-    }
-  };
+  // 검색 (클라이언트)
+const handleSearch = () => {
+  if (!searchText.trim()) {
+    setSearchResults([]);
+    setSearchActive(false);
+    return;
+  }
+  // 현재 디렉토리(displayFiles)에서만 필터링
+  const results = displayFiles.filter(f => f.name.includes(searchText.trim()));
+  setSearchResults(results);
+  setSearchActive(true);
+};
 
-  useEffect(() => {
-    if (!searchText.trim() && !searchActive) {
-      setSearchResults([]);
-    }
-  }, [searchText, searchActive]);
+// 검색어가 비워지면 검색 패널 닫고 결과 초기화
+useEffect(() => {
+  if (!searchText.trim()) {
+    setSearchActive(false);
+    setSearchResults([]);
+  }
+}, [searchText]);
 
   // — 현재 경로에 해당하는 폴더·파일 필터링
   const displayFolders = folders.filter(f =>
@@ -293,25 +296,29 @@ export default function ArchivePage() {
             />
             <button className="search-btn" onMouseDown={handleSearch} aria-label="검색" />
 
-            {/* 검색 패널 */}
             {searchActive && (
-              <div className="search-panel">
-                {searchResults.length > 0 ? (
-                  searchResults.map(f => (
-                    <div
-                      key={f.fileId}
-                      className="search-item"
-                      onMouseDown={() => handleFileDoubleClick(f)}
-                    >
-                      <img src="/mini_file.png" className="sidebar-icon" alt="file" />
-                      {f.fileName}
-                    </div>
-                  ))
-                ) : (
-                  <div className="no-results-sidebar">검색 결과가 없습니다.</div>
-                )}
-              </div>
-            )}
+  <div className="search-panel">
+    {searchResults.length > 0 ? (
+      searchResults.map(f => (
+        <div
+          key={f.id}
+          className="search-item"
+          onMouseDown={() => handleFileDoubleClick(f)}
+        >
+          <img
+            src="/mini_file.png"
+            className="sidebar-icon"
+            alt="file"
+          />
+          {/* 텍스트를 별도 span으로 감쌌습니다 */}
+          <span className="search-item-text">{f.name}</span>
+        </div>
+      ))
+    ) : (
+      <div className="no-results-sidebar">검색 결과가 없습니다.</div>
+    )}
+  </div>
+)}
           </div>
 
           {!searchActive && <div className="folder-tree">{renderTree()}</div>}
