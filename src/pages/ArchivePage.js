@@ -1,42 +1,59 @@
 // src/pages/ArchivePage.js
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { uploadFile } from '../api/fileApi';
+import { uploadFile, renameFile, searchFiles, createFolder } from '../api/fileApi';
 import { v4 as uuidv4 } from 'uuid';
 import { jwtDecode } from 'jwt-decode';
 import './ArchivePage.css';
 
-const ArchivePage = () => {
+export default function ArchivePage() {
   const navigate = useNavigate();
 
-  // 네비게이션 유저 메뉴
+  // — 사용자 & 메뉴 상태
   const [username, setUsername] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // 추가 드롭다운, 사이드바 상태
-  const [addMenuOpen, setAddMenuOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // — 검색 상태
   const [searchText, setSearchText] = useState('');
+  const [searchActive, setSearchActive] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
 
-  // 폴더/파일 관리
+  // — Add 메뉴 상태
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [isAddingFolder, setIsAddingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+
+  // — 정렬 상태
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState('past');
+
+  // — 자료(폴더/파일)
   const [folders, setFolders] = useState([]);
   const [files, setFiles] = useState([]);
-  const [newFolderName, setNewFolderName] = useState('');
-  const [isAddingFolder, setIsAddingFolder] = useState(false);
   const [currentPath, setCurrentPath] = useState([]);
   const [previewFileUrl, setPreviewFileUrl] = useState(null);
 
-  // 초기 로드: 사용자명, 로컬스토리지에서 폴더·파일 불러오기
+  // — 사이드바 트리 확장 상태
+  const [expandedPaths, setExpandedPaths] = useState([]);
+  const toggleExpand = pathKey => {
+    setExpandedPaths(prev =>
+      prev.includes(pathKey)
+        ? prev.filter(k => k !== pathKey)
+        : [...prev, pathKey]
+    );
+  };
+  const isExpanded = pathKey => expandedPaths.includes(pathKey);
+
+  // — 초기 로드: 로컬 스토리지에서 username, folders, files 불러오기
   useEffect(() => {
     const u = localStorage.getItem('username');
     if (u) setUsername(u);
-
     const sf = localStorage.getItem('folders');
     if (sf) {
       try { setFolders(JSON.parse(sf)); }
       catch { localStorage.removeItem('folders'); }
     }
-
     const sF = localStorage.getItem('files');
     if (sF) {
       try { setFiles(JSON.parse(sF)); }
@@ -44,107 +61,183 @@ const ArchivePage = () => {
     }
   }, []);
 
-  // 로그아웃
+  // — 로그아웃
   const handleLogout = () => {
     localStorage.removeItem('username');
     navigate('/');
   };
 
-  // 새 폴더 추가
-  const handleAddFolder = () => {
-    if (!newFolderName.trim()) return;
-    const nf = {
-      id: uuidv4(),
-      name: newFolderName.trim(),
-      color: '#1B512D',
-      path: [...currentPath]
-    };
-    setFolders(prev => {
-      const up = [...prev, nf];
-      localStorage.setItem('folders', JSON.stringify(up));
-      return up;
-    });
-    setNewFolderName('');
-    setIsAddingFolder(false);
+  // — 폴더 클릭: breadcrumb, tree 이동
+  const handleFolderClick = name => setCurrentPath(p => [...p, name]);
+  const handlePathClick   = idx  => setCurrentPath(p => p.slice(0, idx + 1));
+
+  // — Add 메뉴 토글
+  const handleAddFolderStart = () => {
+    setIsAddingFolder(true);
+    setAddMenuOpen(false);
   };
 
-  // 파일 업로드
+  // — 폴더 생성 API 호출
+  const handleAddFolder = useCallback(async () => {
+    const name = newFolderName.trim();
+    if (!name) return alert('폴더 이름을 입력해주세요.');
+    let userId;
+    try {
+      userId = jwtDecode(localStorage.getItem('token')).userId;
+    } catch {
+      return alert('토큰이 유효하지 않습니다.');
+    }
+    const parentId = currentPath.length
+      ? folders.find(f => JSON.stringify(f.path) === JSON.stringify(currentPath))?.id
+      : null;
+    try {
+      const res = await createFolder({ folderName: name, userId, parentId });
+      const { folderId, folderName: createdName } = res.data;
+      // ── 핵심: currentPath 그대로 사용
+      const newFolderItem = {
+        id: folderId,
+        name: createdName,
+        path: [...currentPath],
+      };
+      const updated = [...folders, newFolderItem];
+      setFolders(updated);
+      localStorage.setItem('folders', JSON.stringify(updated));
+      setNewFolderName('');
+      setIsAddingFolder(false);
+    } catch (err) {
+      console.error('폴더 생성 에러', err);
+      alert('폴더 생성에 실패했습니다.');
+    }
+  }, [newFolderName, currentPath, folders]);
+
+  // — 파일 업로드 핸들러
   const handleFileSelect = async e => {
     const file = e.target.files[0];
     if (!file) return;
-    let uid;
-    try { uid = jwtDecode(localStorage.getItem('token')).userId; }
-    catch {
-      alert('로그인 정보를 확인할 수 없습니다.');
-      return;
+    let userId;
+    try {
+      userId = jwtDecode(localStorage.getItem('token')).userId;
+    } catch {
+      return alert('토큰이 유효하지 않습니다.');
     }
-
     const fd = new FormData();
     fd.append('file', file);
-    fd.append('userId', uid);
+    fd.append('userId', userId);
     fd.append('folderId', 1);
-
     try {
       const res = await uploadFile(fd);
-      const { fileInfo } = res.data;
+      const infoArr = res.data.fileInfo;
+      const info = Array.isArray(infoArr) ? infoArr[0] : infoArr;
       const nf = {
         id: uuidv4(),
-        name: fileInfo.fileName,
+        name: info.fileName,
         path: [...currentPath],
-        fileUrl: fileInfo.fileUrl,
-        type: fileInfo.fileType
+        fileUrl: info.fileUrl,
       };
-      setFiles(prev => {
-        const up = [...prev, nf];
-        localStorage.setItem('files', JSON.stringify(up));
-        return up;
-      });
+      const updated = [...files, nf];
+      setFiles(updated);
+      localStorage.setItem('files', JSON.stringify(updated));
     } catch (err) {
-      console.error(err);
+      console.error('파일 업로드 실패', err);
       alert('파일 업로드에 실패했습니다.');
+    } finally {
+      setAddMenuOpen(false);
     }
   };
 
-  // 경로 이동 핸들러
-  const handleFolderClick = name => setCurrentPath(p => [...p, name]);
-  const handlePathClick = idx => setCurrentPath(p => p.slice(0, idx + 1));
-
-  // PDF 미리보기 핸들러
+  // — PDF 미리보기
   const handleFileDoubleClick = file =>
-    file.fileUrl
-      ? setPreviewFileUrl(file.fileUrl)
-      : alert('파일 URL이 없습니다.');
+    file.fileUrl ? setPreviewFileUrl(file.fileUrl) : alert('URL이 없습니다.');
   const closePreview = () => setPreviewFileUrl(null);
 
-  // 재귀 폴더 트리 렌더링 (폴더 + 파일)
+  // — 삭제 / 이름 변경
+  const handleDeleteFolder = id => {
+    if (!window.confirm('삭제하시겠습니까?')) return;
+    const next = folders.filter(f => f.id !== id);
+    setFolders(next);
+    localStorage.setItem('folders', JSON.stringify(next));
+  };
+  const handleDeleteFile = id => {
+    if (!window.confirm('삭제하시겠습니까?')) return;
+    const next = files.filter(f => f.id !== id);
+    setFiles(next);
+    localStorage.setItem('files', JSON.stringify(next));
+  };
+  const handleRenameFile = async file => {
+    const newName = prompt('새 이름을 입력하세요', file.name);
+    if (!newName || newName === file.name) return;
+    try {
+      const res = await renameFile(file.id, newName);
+      const updated = res.data;
+      const next = files.map(f =>
+        f.id === updated.fileId ? { ...f, name: updated.fileName } : f
+      );
+      setFiles(next);
+      localStorage.setItem('files', JSON.stringify(next));
+    } catch {
+      alert('이름 변경 실패');
+    }
+  };
+
+  // — 검색 핸들러
+  const handleSearch = async () => {
+    if (!searchText.trim()) return;
+    try {
+      const res = await searchFiles(searchText.trim());
+      setSearchResults(res.data);
+    } catch (err) {
+      console.error('검색 실패', err);
+      alert('검색에 실패했습니다.');
+    }
+  };
+
+  useEffect(() => {
+    if (!searchText.trim() && !searchActive) {
+      setSearchResults([]);
+    }
+  }, [searchText, searchActive]);
+
+  // — 현재 경로에 해당하는 폴더·파일 필터링
+  const displayFolders = folders.filter(f =>
+    JSON.stringify(f.path) === JSON.stringify(currentPath)
+  );
+  const displayFiles = files.filter(f =>
+    JSON.stringify(f.path) === JSON.stringify(currentPath)
+  );
+
+  // — 정렬 적용
+  if (sortOrder === 'recent') {
+    displayFolders.reverse();
+    displayFiles.reverse();
+  } else if (sortOrder === 'alpha') {
+    displayFolders.sort((a, b) => a.name.localeCompare(b.name));
+    displayFiles.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  // — 사이드바 재귀 렌더링
   const renderTree = (path = []) => {
-    const subFolders = folders.filter(f => JSON.stringify(f.path) === JSON.stringify(path));
-    const subFiles   = files.filter(f => JSON.stringify(f.path) === JSON.stringify(path));
-
-    if (!subFolders.length && !subFiles.length) return null;
-
+    const key = JSON.stringify(path);
+    const subsF = folders.filter(f => JSON.stringify(f.path) === key);
+    const subsI = files.filter(f => JSON.stringify(f.path) === key);
+    if (!subsF.length && !subsI.length) return null;
     return (
       <ul>
-        {subFolders.map(f => (
-          <li
-            key={f.id}
-            className="folder-node"
-            onClick={() => handleFolderClick(f.name)}
-          >
-            <img src="/mini_folder.png" alt="folder" className="sidebar-icon" />
-            {f.name}
-            {renderTree([...path, f.name])}
-          </li>
-        ))}
-
-        {subFiles.map(file => (
-          <li
-            key={file.id}
-            className="file-node"
-            onClick={() => handleFileDoubleClick(file)}
-          >
-            <img src="/mini_file.png" alt="file" className="sidebar-icon" />
-            {file.name}
+        {subsF.map(f => {
+          const childKey = JSON.stringify([...path, f.name]);
+          return (
+            <li key={f.id} className="folder-node">
+              <div onClick={() => toggleExpand(childKey)}>
+                <img src="/mini_folder.png" className="sidebar-icon" alt="folder" />
+                {f.name}
+              </div>
+              {isExpanded(childKey) && renderTree([...path, f.name])}
+            </li>
+          );
+        })}
+        {subsI.map(fi => (
+          <li key={fi.id} className="file-node" onClick={() => handleFileDoubleClick(fi)}>
+            <img src="/mini_file.png" className="sidebar-icon" alt="file" />
+            {fi.name}
           </li>
         ))}
       </ul>
@@ -153,12 +246,10 @@ const ArchivePage = () => {
 
   return (
     <div className="archive-container">
-      {/* 상단 네비게이션 바 */}
+      {/* 네비게이션 */}
       <nav className="navbar">
-        <h1 className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-          <span className="edu">Edu</span>
-          <span className="ve">'ve</span>
-          <span className="com">.com</span>
+        <h1 className="logo" onClick={() => navigate('/')}>
+          <span className="edu">Edu</span><span className="ve">'ve</span><span className="com">.com</span>
         </h1>
         <div className="nav-links">
           <span className="nav-item" onClick={() => navigate('/character')}>캐릭터</span>
@@ -171,8 +262,8 @@ const ArchivePage = () => {
               </button>
               {menuOpen && (
                 <div className="user-dropdown">
-                  <button onClick={() => navigate('/settings')}>⚙️ 설정</button>
-                  <button onClick={handleLogout}>🚪 로그아웃</button>
+                  <button onClick={() => navigate('/settings')}>설정</button>
+                  <button onClick={handleLogout}>로그아웃</button>
                 </div>
               )}
             </div>
@@ -185,53 +276,59 @@ const ArchivePage = () => {
         </div>
       </nav>
 
-      {/* 본문: 사이드바 + 메인 */}
+      {/* 본문 */}
       <div className="archive-body">
         {/* 사이드바 */}
-        <aside className={`sidebar ${sidebarOpen ? '' : 'collapsed'}`}>
+        <aside className="sidebar">
           <div className="search-wrapper">
             <input
               className="archive-search"
               type="text"
               placeholder="Search"
               value={searchText}
+              onFocus={() => setSearchActive(true)}
+              onBlur={() => setSearchActive(false)}
               onChange={e => setSearchText(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
             />
-            {sidebarOpen && (
-              <button
-                className="sidebar-toggle"
-                onClick={() => setSidebarOpen(false)}
-              >
-                &lt;&lt;
-              </button>
+            <button className="search-btn" onMouseDown={handleSearch} aria-label="검색" />
+
+            {/* 검색 패널 */}
+            {searchActive && (
+              <div className="search-panel">
+                {searchResults.length > 0 ? (
+                  searchResults.map(f => (
+                    <div
+                      key={f.fileId}
+                      className="search-item"
+                      onMouseDown={() => handleFileDoubleClick(f)}
+                    >
+                      <img src="/mini_file.png" className="sidebar-icon" alt="file" />
+                      {f.fileName}
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-results-sidebar">검색 결과가 없습니다.</div>
+                )}
+              </div>
             )}
           </div>
-          <div className="folder-tree">
-            {renderTree([])}
-          </div>
+
+          {!searchActive && <div className="folder-tree">{renderTree()}</div>}
         </aside>
 
-        {/* 메인 영역 */}
+        {/* 메인 */}
         <main className="archive-main">
-          {!sidebarOpen && (
-            <button
-              className="sidebar-toggle main-toggle"
-              onClick={() => setSidebarOpen(true)}
-            >
-              &gt;&gt;
-            </button>
-          )}
-
-          {/* 경로 표시 */}
+          {/* breadcrumb + 정렬 */}
           <div className="path-display">
             {currentPath.length === 0 ? (
               <span className="path-link">홈</span>
             ) : (
               <>
-                <span className="path-link" onClick={() => handlePathClick(-1)}>홈</span>
+                <span className="path-link" onClick={() => setCurrentPath([])}>홈</span>
                 {currentPath.map((p, i) => (
                   <span
-                    key={p + i}
+                    key={i}
                     className="path-link"
                     onClick={() => handlePathClick(i)}
                   >
@@ -240,93 +337,103 @@ const ArchivePage = () => {
                 ))}
               </>
             )}
+            <button className="sort-toggle" onClick={() => setSortMenuOpen(o => !o)}>정렬 ▼</button>
+            {sortMenuOpen && (
+              <div className="sort-dropdown">
+                <button onClick={() => { setSortOrder('past'); setSortMenuOpen(false); }}>
+                  {sortOrder === 'past' ? '✔ ' : ''}기본순
+                </button>
+                <button onClick={() => { setSortOrder('recent'); setSortMenuOpen(false); }}>
+                  {sortOrder === 'recent' ? '✔ ' : ''}최신순
+                </button>
+                <button onClick={() => { setSortOrder('alpha'); setSortMenuOpen(false); }}>
+                  {sortOrder === 'alpha' ? '✔ ' : ''}가나다순
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* add 버튼 + 폴더 리스트 */}
-          <div className="action-and-folders">
-            <div className="add-container">
-              <button className="add-toggle" onClick={() => setAddMenuOpen(o => !o)}>
-                <img src="/add.png" alt="추가" className="add-icon" />
-              </button>
+          {/* 폴더 리스트 */}
+          <div className="folder-list">
+            <div
+              className="folder-box add-placeholder"
+              onClick={() => { setAddMenuOpen(o => !o); setIsAddingFolder(false); }}
+            >
+              <img src="/add.png" className="folder-icon" alt="추가" />
               {addMenuOpen && (
-                <div className="add-dropdown">
-                  <button onClick={() => {
-                    document.getElementById('file-upload').click();
-                    setAddMenuOpen(false);
-                  }}>파일추가</button>
-                  <button onClick={() => {
-                    setIsAddingFolder(true);
-                    setAddMenuOpen(false);
-                  }}>폴더추가</button>
+                <div className="add-dropdown under-add-placeholder">
+                  <button onMouseDown={e => { e.stopPropagation(); document.getElementById('file-upload').click(); }}>
+                    파일추가
+                  </button>
+                  <button onMouseDown={e => { e.stopPropagation(); handleAddFolderStart(); }}>
+                    폴더추가
+                  </button>
                 </div>
               )}
-              <input
-                id="file-upload"
-                type="file"
-                style={{ display: 'none' }}
-                onChange={handleFileSelect}
-              />
             </div>
-
-            <div className="folder-list">
-              {isAddingFolder && (
-                <div className="folder-box new-folder">
-                  <img src="/folder.png" className="folder-icon" alt="new folder" />
-                  <input
-                    className="folder-name-input"
-                    placeholder="이름 입력"
-                    value={newFolderName}
-                    onChange={e => setNewFolderName(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleAddFolder()}
-                    autoFocus
-                  />
-                </div>
-              )}
-              {folders
-                .filter(f => JSON.stringify(f.path) === JSON.stringify(currentPath))
-                .map(f => (
-                  <div
-                    key={f.id}
-                    className="folder-box"
-                    onClick={() => handleFolderClick(f.name)}
-                  >
-                    <img src="/folder.png" className="folder-icon" alt="folder" />
-                    <div className="folder-name">{f.name}</div>
-                  </div>
-                ))}
-            </div>
+            {displayFolders.map(f => (
+              <div
+                key={f.id}
+                className="folder-box"
+                onClick={() => handleFolderClick(f.name)}
+                onContextMenu={e => { e.preventDefault(); handleDeleteFolder(f.id); }}
+              >
+                <img src="/folder.png" className="folder-icon" alt="folder" />
+                <div className="folder-name">{f.name}</div>
+              </div>
+            ))}
+            {isAddingFolder && (
+              <div className="folder-box new-folder">
+                <img src="/folder.png" className="folder-icon" alt="new folder" />
+                <input
+                  className="folder-name-input"
+                  placeholder="폴더 이름"
+                  value={newFolderName}
+                  onChange={e => setNewFolderName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAddFolder()}
+                  autoFocus
+                />
+              </div>
+            )}
           </div>
+
+          {/* 숨겨진 파일 업로드 input */}
+          <input
+            id="file-upload"
+            type="file"
+            style={{ display: 'none' }}
+            onChange={handleFileSelect}
+          />
 
           {/* 파일 리스트 */}
           <div className="file-list">
-            {files
-              .filter(f => JSON.stringify(f.path) === JSON.stringify(currentPath))
-              .map(file => (
-                <div
-                  key={file.id}
-                  className="file-box"
-                  onDoubleClick={() => handleFileDoubleClick(file)}
-                >
-                  <img src="/pdf-thumbnail.png" className="file-thumbnail" alt="file" />
-                  <div className="file-name">{file.name}</div>
-                </div>
-              ))}
+            {displayFiles.length === 0 && displayFolders.length === 0 && !searchActive && (
+              <div className="no-results">아직 업로드된 파일이나 폴더가 없습니다.</div>
+            )}
+            {displayFiles.map(file => (
+              <div
+                key={file.id}
+                className="file-box"
+                onDoubleClick={() => handleFileDoubleClick(file)}
+                onContextMenu={e => {
+                  e.preventDefault();
+                  const action = window.confirm('이름 변경: OK, 삭제: Cancel') ? 'rename' : 'delete';
+                  if (action === 'rename') handleRenameFile(file);
+                  else handleDeleteFile(file.id);
+                }}
+              >
+                <img src="/pdf-thumbnail.png" className="file-thumbnail" alt="file" />
+                <div className="file-name">{file.name}</div>
+              </div>
+            ))}
           </div>
 
           {/* PDF 미리보기 모달 */}
           {previewFileUrl && (
             <div className="modal-overlay" onClick={closePreview}>
               <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <iframe
-                  src={previewFileUrl}
-                  title="PDF 미리보기"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 'none' }}
-                />
-                <button className="close-btn" onClick={closePreview}>
-                  닫기
-                </button>
+                <iframe src={previewFileUrl} title="PDF Preview" style={{ border: 'none' }} />
+                <button className="close-btn" onClick={closePreview}>닫기</button>
               </div>
             </div>
           )}
@@ -334,6 +441,4 @@ const ArchivePage = () => {
       </div>
     </div>
   );
-};
-
-export default ArchivePage;
+}

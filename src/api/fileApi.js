@@ -1,72 +1,67 @@
 // src/api/fileApi.js
-import axios from 'axios';
-import axiosInstance from './axiosInstance'; // 👈 우리가 만든 인스턴스 import
 
-// ✅ Spring Boot 백엔드 주소
-const BASE_URL = 'http://15.164.97.117:8080';
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+import axiosInstance from './axiosInstance';
 
-/*
-// ✅ 인증 헤더 생성 함수
-const getAuthHeaders = (isJson = false) => {
-  const token = localStorage.getItem('token');
-  const headers = {
-    Authorization: `${token}`,
-  };
+/**
+ * 파일 업로드 (FormData + multipart/form-data)
+ * @param {FormData} formData
+ */
+export const uploadFile = formData =>
+  axiosInstance.post(
+    '/resources/file/text',
+    formData,
+  );
 
-  if (isJson) {
-    headers['Content-Type'] = 'application/json';
-  }
+/**
+ * 파일 조회
+ * @param {string|number} fileId
+ */
+export const fetchFile = fileId =>
+  axiosInstance.get(`/resources/file/${fileId}`);
 
-  return { headers };
-};
-*/
+/**
+ * 파일 이름 변경
+ * @param {string|number} fileId
+ * @param {string} newName
+ */
+export const renameFile = (fileId, newName) =>
+  axiosInstance.patch(
+    `/resources/file/${fileId}/rename`,
+    { name: newName }
+  );
 
-//
-// ✅ 파일 업로드 (FormData + 인증 헤더)
-//
-export const uploadFile = (formData) => {
-  return axiosInstance.post(`/resources/file/text`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
+/**
+ * 파일 이동
+ * @param {string|number} fileId
+ * @param {string|number} folderId
+ */
+export const moveFile = (fileId, folderId) =>
+  axiosInstance.patch(
+    `/resources/file/${fileId}/move`,
+    { folderId }
+  );
+
+/**
+ * 파일 삭제
+ * @param {string|number} fileId
+ */
+export const deleteFile = fileId =>
+  axiosInstance.delete(`/resources/file/${fileId}`);
+
+/**
+ * 파일 키워드 검색
+ * @param {string} keyword
+ */
+export const searchFiles = keyword =>
+  axiosInstance.get('/resources/file/search', {
+    params: { keyword }
   });
-};
 
-
-//
-// ✅ 파일 조회
-//
-export const fetchFile = (fileId) => {
-  return axios.get(`${BASE_URL}/resources/file/${fileId}`);
-};
-
-//
-// ✅ 파일 이름 변경
-//
-export const renameFile = (fileId, newName) => {
-  return axios.patch(
-    `${BASE_URL}/resources/file/${fileId}/rename`,
-    { name: newName },
-    //getAuthHeaders(true)
+/**
+  * 새 폴더 생성
+ * @param {{ folderName: string, userId: number|string, parentId?: number|string|null }} data
+ */
+export const createFolder = ({ folderName, userId, parentId = null }) =>
+  axiosInstance.post(
+    `/folders?folderName=${encodeURIComponent(folderName)}&userId=${userId}${parentId !== null ? `&parentId=${parentId}` : ''}`
   );
-};
-
-//
-// ✅ 파일 이동
-//
-export const moveFile = (fileId, folderId) => {
-  return axios.patch(
-    `${BASE_URL}/resources/file/${fileId}/move`,
-    { folderId },
-    //getAuthHeaders(true)
-  );
-};
-
-//
-// ✅ 파일 삭제
-//
-export const deleteFile = (fileId) => {
-  return axios.delete(`${BASE_URL}/resources/file/${fileId}`);
-};
-
